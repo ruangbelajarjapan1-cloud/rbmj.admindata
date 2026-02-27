@@ -22,7 +22,7 @@
         #login-screen { position: fixed; inset: 0; background: #f8fafc; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
     </style>
 </head>
-<body class="max-w-md mx-auto bg-slate-100 min-h-screen flex flex-col relative overflow-hidden shadow-2xl">
+<body class="max-w-md mx-auto bg-slate-100 h-[100dvh] flex flex-col relative overflow-hidden shadow-2xl">
 
     <script>
         // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
@@ -247,8 +247,8 @@
             }
 
             // Pengecekan PIN
-            const pinGuru = typeof guruValid === 'string' ? "" : guruValid.pin;
-            if (pinGuru.toString() !== pinInput.toString()) { 
+           const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
+if (String(pinGuru) !== String(pinInput)) {
                 showMsg("PIN Salah! Cek kembali di Spreadsheet.", "warning"); return; 
             }
             
@@ -299,11 +299,17 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-        // --- FETCH DATA ---
+       // --- FETCH DATA ---
         async function loadDatabase() {
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.remove('hidden');
             
+            // 1. Siapkan opsi default & Admin DILUAR try-catch agar selalu muncul
+            const selectGuru = document.getElementById('login-nama-guru');
+            selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
+            selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
+
             try {
+                // 2. Mulai ambil data dari Google Apps Script
                 const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
                 
@@ -311,16 +317,13 @@
                 DATA_HARGA = result.prices || {};
                 DATA_GURU_ALL = result.teachers || []; 
                 
-                const selectGuru = document.getElementById('login-nama-guru');
-                
-                selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
-                // Masukkan nama Admin Wahyu di paling atas
-                selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
-                
+                // 3. Masukkan guru lain dari database (pastikan Admin tidak duplikat)
                 if(DATA_GURU_ALL.length > 0) {
                     DATA_GURU_ALL.forEach(g => {
                         let namaGuru = typeof g === 'string' ? g : g.nama;
-                        selectGuru.innerHTML += `<option value="${namaGuru}">${namaGuru}</option>`;
+                        if (namaGuru !== "Admin RBM (Wahyu)") {
+                            selectGuru.innerHTML += `<option value="${namaGuru}">${namaGuru}</option>`;
+                        }
                     });
                 }
                 
@@ -338,35 +341,10 @@
 
             } catch (err) {
                 showMsg("Koneksi ke Database Gagal!", "warning");
-                console.error(err);
+                console.error("Error Fetching Data:", err);
             }
+            
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.add('hidden');
-        }
-
-        // --- FILTER MURID CERDAS (Mencocokkan Jadwal & Nama Guru) ---
-        function saringMuridBerdasarkanAkses() {
-            if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
-                FILTERED_SISWA = [...DATA_SISWA]; // Admin melihat semua murid
-            } else {
-                // Saring murid yang di dalam jadwal belajarnya ada nama guru ini
-                FILTERED_SISWA = DATA_SISWA.filter(s => {
-                    return s.schedule && s.schedule.some(jadwal => {
-                        return jadwal.teacher && jadwal.teacher.includes(LOGGED_IN_TEACHER);
-                    });
-                });
-            }
-
-            // Update angka total santri kelas
-            document.getElementById('stat-total').innerText = FILTERED_SISWA.length;
-            
-            // Render ulang daftar nama santri & dropdown
-            renderSantri(FILTERED_SISWA);
-            populateCatatanDropdown(FILTERED_SISWA);
-            
-            // Render fitur SPP hanya jika yang login Admin
-            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
-                renderRekapSPP();
-            }
         }
 
         function populateCatatanDropdown(data) {
