@@ -346,7 +346,31 @@ if (String(pinGuru) !== String(pinInput)) {
             
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.add('hidden');
         }
+// --- FILTER MURID CERDAS (Mencocokkan Jadwal & Nama Guru) ---
+        function saringMuridBerdasarkanAkses() {
+            if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
+                FILTERED_SISWA = [...DATA_SISWA]; // Admin melihat semua murid
+            } else {
+                // Saring murid yang di dalam jadwal belajarnya ada nama guru ini
+                FILTERED_SISWA = DATA_SISWA.filter(s => {
+                    return s.schedule && s.schedule.some(jadwal => {
+                        return jadwal.teacher && jadwal.teacher.includes(LOGGED_IN_TEACHER);
+                    });
+                });
+            }
 
+            // Update angka total santri kelas
+            document.getElementById('stat-total').innerText = FILTERED_SISWA.length;
+            
+            // Render ulang daftar nama santri & dropdown
+            if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
+            if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
+            
+            // Render fitur SPP hanya jika yang login Admin
+            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
+                if (typeof renderRekapSPP === "function") renderRekapSPP();
+            }
+        }
         function populateCatatanDropdown(data) {
             const select = document.getElementById('inputCatatanNama');
             select.innerHTML = '<option value="">-- Pilih Santri di Kelas Anda --</option>';
