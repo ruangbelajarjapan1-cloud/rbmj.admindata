@@ -326,10 +326,19 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-        function formatArabBidi(text) {
-            // Gunakan \u202A (Left-to-Right Embedding) agar teks Latin terkunci di kiri dan Arab di kanan
+      function formatArabBidi(text) {
             if(/[\u0600-\u06FF]/.test(text)) {
-                return '\u202A' + text + '\u202C'; 
+                // 1. Ekstrak teks Latin (Hapus semua huruf Arab)
+                let latinPart = text.replace(/[\u0600-\u06FF]+/g, '').trim();
+                
+                // 2. Ekstrak teks Arab secara utuh (Hapus semua KECUALI huruf Arab dan spasi)
+                let arabicPart = text.replace(/[^\u0600-\u06FF\s]/g, '').trim();
+                
+                // 3. Bungkus dengan format isolasi BiDi tingkat tinggi:
+                // \u202A = Kunci Latin ke Kiri-Kanan (LTR)
+                // \u202B = Kunci Arab ke Kanan-Kiri (RTL)
+                // \u202C = Penutup (Pop Directional Formatting)
+                return '\u202A' + latinPart + '\u202C \u202B' + arabicPart + '\u202C'; 
             }
             return text;
         }
