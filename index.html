@@ -249,9 +249,15 @@
         let LOGGED_IN_TEACHER = ""; 
 
         document.addEventListener("DOMContentLoaded", () => {
-            const dateInput = document.getElementById('input-tgl-absen');
             const today = new Date();
-            dateInput.valueAsDate = today;
+            
+            // 1. Set default kalender Absensi
+            const dateInput = document.getElementById('input-tgl-absen');
+            if(dateInput) dateInput.valueAsDate = today;
+
+            // 2. Set default kalender Catatan & Nilai (Ini yang ditambahkan)
+            const dateCatatanInput = document.getElementById('input-tgl-catatan');
+            if(dateCatatanInput) dateCatatanInput.valueAsDate = today;
 
             try {
                 const hijriFormatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -708,7 +714,7 @@
             return count;
         }
 
-        function renderRekapSPP() {
+       function renderRekapSPP() {
             const listContainer = document.getElementById('list-tunggakan');
             const selectBulan = document.getElementById('select-bulan-spp');
             const namaBulan = selectBulan.options[selectBulan.selectedIndex].text;
