@@ -191,7 +191,7 @@
         <div id="view-kas" class="hidden space-y-5 fade-in">
             <div class="flex justify-between items-center px-1 mt-2">
                 <h2 class="text-xl font-extrabold text-slate-800">Rekap SPP</h2>
-                <select id="select-bulan-spp" onchange="gantiBulanSPP()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-sm uppercase tracking-wider">
+                <select id="select-bulan-spp" onchange="gantiBulanSPP()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-50 cursor-pointer shadow-sm uppercase tracking-wider">
                     <option value="1">Januari 2026</option>
                     <option value="2">Februari 2026</option>
                     <option value="3">Maret 2026</option>
@@ -210,7 +210,7 @@
             <div class="glass-card p-5 rounded-[1.5rem]">
                 <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
                     <button id="tab-spp-nunggak" onclick="switchTabSPP('nunggak')" class="flex-1 text-[10px] font-bold py-2 rounded-lg bg-white text-blue-600 shadow-sm transition-all">Belum Lunas</button>
-                    <button id="tab-spp-semua" onclick="switchTabSPP('semua')" class="flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all">Semua Data</button>
+                    <button id="tab-spp-semua" onclick="switchTabSPP('semua')" class="flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all cursor-pointer">Semua Data</button>
                 </div>
 
                 <div class="flex justify-between items-center mb-4">
@@ -298,10 +298,14 @@
             }
 
             const guruValid = DATA_GURU_ALL.find(g => (typeof g === 'string' ? g : g.nama) === nama);
-            if(!guruValid) { showMsg("Data guru tidak ditemukan", "warning"); return; }
+            if(!guruValid) {
+                showMsg("Data guru tidak ditemukan", "warning"); return;
+            }
 
             const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
-            if (String(pinGuru) !== String(pinInput)) { showMsg("PIN Salah! Cek kembali.", "warning"); return; }
+            if (String(pinGuru) !== String(pinInput)) {
+                showMsg("PIN Salah! Cek kembali.", "warning"); return; 
+            }
             
             LOGGED_IN_TEACHER = typeof guruValid === 'string' ? guruValid : guruValid.nama;
             simpanSesiLogin();
@@ -352,13 +356,9 @@
         // --- TRIK ARAB BIDI ---
         function formatArabBidi(text) {
             if(/[\u0600-\u06FF]/.test(text)) {
-                // Ekstrak teks Latin
                 let latinPart = text.replace(/[\u0600-\u06FF]+/g, '').trim();
-                // Ekstrak kata-kata Arab ke dalam array
                 let arabicWords = text.match(/[\u0600-\u06FF]+/g);
-                
                 if (arabicWords) {
-                    // Putar balik urutan kata Arabnya secara paksa untuk mengelabui browser dropdown
                     let reversedArabic = arabicWords.reverse().join(' ');
                     return latinPart + ' ' + reversedArabic;
                 }
@@ -385,13 +385,16 @@
             try {
                 const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
+                
                 localStorage.setItem('rbm_data_cache', JSON.stringify(result));
                 
                 selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
                 selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
                 prosesDataKeUI(result, selectGuru);
+
             } catch (err) {
                 if(!cachedData) showMsg("Koneksi ke Database Gagal!", "warning");
+                console.error("Error Fetching Data:", err);
             }
             
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.add('hidden');
@@ -414,7 +417,9 @@
             
             DATA_SISWA.sort((a,b) => a.name.localeCompare(b.name));
 
-            if (LOGGED_IN_TEACHER) saringMuridBerdasarkanAkses();
+            if (LOGGED_IN_TEACHER) {
+                saringMuridBerdasarkanAkses();
+            }
 
             if(result.donasi) {
                 document.getElementById('donasi-teks').innerText = `Terkumpul: ¥${result.donasi.terkumpul.toLocaleString('ja-JP')}`;
@@ -436,11 +441,13 @@
 
             document.getElementById('stat-total').innerText = FILTERED_SISWA.length;
             
-            renderSantri(FILTERED_SISWA);
-            populateCatatanDropdown(FILTERED_SISWA);
-            renderPertanyaan();
+            if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
+            if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
+            if (typeof renderPertanyaan === "function") renderPertanyaan();
             
-            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") renderRekapSPP();
+            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
+                if (typeof renderRekapSPP === "function") renderRekapSPP();
+            }
         }
 
         function populateCatatanDropdown(data) {
@@ -449,7 +456,7 @@
             data.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
         }
 
-        // --- RENDER SANTRI ---
+        // --- RENDER SANTRI (DENGAN SMART DROPDOWN KELAS) ---
         function renderSantri(data) {
             const container = document.getElementById('santri-container');
             container.innerHTML = ""; 
@@ -460,23 +467,65 @@
 
             data.forEach(s => {
                 const color = ['blue', 'emerald', 'orange', 'indigo', 'rose'][s.name.length % 5];
-                const kelasUtama = s.classes[0] ? s.classes[0].split('(')[0] : 'Umum';
+                
+                // Cari list kelas unik untuk siswa ini (Sesuai Guru yang Login)
+                let listKelas = [];
+                if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
+                    // Jika Admin, bisa lihat semua kelas yang diikuti murid tersebut
+                    if (s.classes && s.classes.length > 0) {
+                        listKelas = s.classes.map(c => c.split('(')[0].trim());
+                    }
+                } else {
+                    // Jika Guru, HANYA munculkan kelas yang diajarkan oleh guru tersebut
+                    if (s.schedule) {
+                        s.schedule.forEach(jadwal => {
+                            if (jadwal.teacher && jadwal.teacher.includes(LOGGED_IN_TEACHER)) {
+                                listKelas.push(jadwal.subject.split('(')[0].trim());
+                            }
+                        });
+                    }
+                }
+                
+                // Fallback (Jaga-jaga jika list kosong)
+                if (listKelas.length === 0) {
+                    if (s.classes && s.classes.length > 0) {
+                        listKelas.push(s.classes[0].split('(')[0].trim());
+                    } else {
+                        listKelas.push("Umum");
+                    }
+                }
+                
+                // Hapus duplikat jika ada nama kelas yang sama
+                listKelas = [...new Set(listKelas)];
+
+                // Buat UI Pemilih Kelas (Dropdown jika > 1, Teks biasa jika cuma 1)
+                let kelasUI = '';
+                let idSelectKelas = `mapel-${s.id}`;
+                
+                if (listKelas.length > 1) {
+                    let options = listKelas.map(k => `<option value="${k}">${k}</option>`).join('');
+                    kelasUI = `<select id="${idSelectKelas}" class="text-[10px] text-slate-600 font-bold bg-slate-100 border border-slate-200 rounded px-1.5 py-1 mt-1 w-full max-w-[140px] truncate outline-none focus:ring-1 focus:ring-blue-500">${options}</select>`;
+                } else {
+                    kelasUI = `<p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5 line-clamp-1" id="${idSelectKelas}" data-value="${listKelas[0]}">${listKelas[0]}</p>`;
+                }
+
+                const safeName = s.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 const card = document.createElement('div');
                 card.className = "glass-card p-4 rounded-[1.25rem] flex justify-between items-center mb-3 group";
                 card.innerHTML = `
-                    <div class="flex-1 pr-3 flex items-center">
-                        <div class="w-10 h-10 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center font-extrabold text-sm mr-3 shrink-0 uppercase">
+                    <div class="flex-1 pr-3 flex items-start min-w-0">
+                        <div class="w-10 h-10 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center font-extrabold text-sm mr-3 shrink-0 uppercase mt-0.5">
                             ${s.name.charAt(0)}
                         </div>
-                        <div>
+                        <div class="flex-1 min-w-0">
                             <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-1">${s.name}</p>
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">${kelasUtama}</p>
+                            ${kelasUI}
                         </div>
                     </div>
-                    <div class="flex flex-col gap-2 w-20 shrink-0">
-                        <button onclick="kirimAbsen('${s.id}', '${s.name}', 'Hadir')" class="py-1.5 bg-blue-500 text-white text-[10px] font-bold rounded-lg w-full active:scale-90 transition-transform shadow-md shadow-blue-200">HADIR</button>
-                        <button onclick="kirimAbsen('${s.id}', '${s.name}', 'Sakit/Izin')" class="py-1.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg w-full active:scale-90 transition-transform border border-slate-200">IZIN</button>
+                    <div class="flex flex-col gap-2 w-16 shrink-0">
+                        <button onclick="prosesAbsenUI('${s.id}', '${safeName}', 'Hadir', '${idSelectKelas}')" class="py-1.5 bg-blue-500 text-white text-[10px] font-bold rounded-lg w-full active:scale-90 transition-transform shadow-md shadow-blue-200">HADIR</button>
+                        <button onclick="prosesAbsenUI('${s.id}', '${safeName}', 'Sakit/Izin', '${idSelectKelas}')" class="py-1.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg w-full active:scale-90 transition-transform border border-slate-200">IZIN</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -486,6 +535,18 @@
         document.getElementById('searchInput').addEventListener('input', (e) => {
             renderSantri(FILTERED_SISWA.filter(s => s.name && s.name.toLowerCase().includes(e.target.value.toLowerCase())));
         });
+
+        // FUNGSI JEMBATAN UNTUK AMBIL KELAS DARI UI
+        function prosesAbsenUI(id, nama, status, idSelectKelas) {
+            const el = document.getElementById(idSelectKelas);
+            let mapel = "";
+            if (el.tagName === 'SELECT') {
+                mapel = el.value; // Jika murid punya 2 kelas, ambil yang dipilih di dropdown
+            } else {
+                mapel = el.getAttribute('data-value') || el.innerText; // Jika cuma 1 kelas
+            }
+            kirimAbsen(id, nama, status, mapel);
+        }
 
         // --- RENDER PERTANYAAN ---
         function renderPertanyaan() {
@@ -580,11 +641,21 @@
         }
 
         // --- FITUR POST LAINNYA ---
-        async function kirimAbsen(id, nama, status) {
+        async function kirimAbsen(id, nama, status, mapel) {
             const tglAbsen = document.getElementById('input-tgl-absen').value; 
-            showMsg(`Memproses absen ${nama}...`, 'success');
+            showMsg(`Menyimpan absen ${nama}...`, 'success');
             try {
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'absen_admin', id: id, status: status, guru: LOGGED_IN_TEACHER, tanggal_absen: tglAbsen }) });
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'absen_admin', 
+                        id: id, 
+                        status: status, 
+                        guru: LOGGED_IN_TEACHER, 
+                        tanggal_absen: tglAbsen,
+                        mapel: mapel // Mengirim mata pelajaran spesifik yang dipilih/terdeteksi
+                    }) 
+                });
                 showMsg(`✅ Absen tersimpan!`, 'success'); playSound('success');
             } catch (err) {
                 showMsg(`✅ Absen tersimpan!`, 'success'); playSound('success');
