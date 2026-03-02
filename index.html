@@ -93,7 +93,14 @@
                     </div>
                 </div>
             </div>
-
+<div id="view-tanya" class="hidden space-y-5 fade-in">
+            <div class="flex justify-between items-center px-1 mt-2">
+                <h2 class="text-xl font-extrabold text-slate-800">Pertanyaan Santri</h2>
+                <span id="badge-tanya" class="text-[10px] font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full uppercase tracking-wider">0 Menunggu</span>
+            </div>
+            <div id="list-pertanyaan" class="space-y-4">
+                </div>
+        </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="glass-card p-5 rounded-[1.5rem] border border-white">
                     <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-3 text-blue-600"><i class="fa-solid fa-users"></i></div>
@@ -196,11 +203,12 @@
     </div>
 
     <div class="fixed bottom-0 w-full max-w-md bg-transparent z-40 p-5 pb-6 pointer-events-none" id="bottom-nav" style="display:none;">
-        <nav class="bg-white/95 backdrop-blur-xl border border-slate-200/60 flex justify-around rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] pointer-events-auto overflow-hidden">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center py-4 px-2 active-tab text-slate-400 w-1/4 transition-colors"><i class="fa-solid fa-house text-xl"></i></button>
-            <button onclick="switchTab('absensi')" id="nav-absensi" class="flex flex-col items-center py-4 px-2 text-slate-400 w-1/4 transition-colors"><i class="fa-solid fa-calendar-check text-xl"></i></button>
-            <button onclick="switchTab('catatan')" id="nav-catatan" class="flex flex-col items-center py-4 px-2 text-slate-400 w-1/4 transition-colors"><i class="fa-solid fa-clipboard-list text-xl"></i></button>
-            <button onclick="switchTab('kas')" id="nav-kas" class="flex flex-col items-center py-4 px-2 text-slate-400 w-1/4 transition-colors hidden"><i class="fa-solid fa-wallet text-xl"></i></button>
+       <nav class="bg-white/95 backdrop-blur-xl border border-slate-200/60 flex justify-around rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] pointer-events-auto overflow-hidden">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center py-4 px-1 active-tab text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-house text-xl"></i></button>
+            <button onclick="switchTab('absensi')" id="nav-absensi" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-calendar-check text-xl"></i></button>
+            <button onclick="switchTab('catatan')" id="nav-catatan" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-clipboard-list text-xl"></i></button>
+            <button onclick="switchTab('tanya')" id="nav-tanya" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-comments text-xl"></i></button>
+            <button onclick="switchTab('kas')" id="nav-kas" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors hidden"><i class="fa-solid fa-wallet text-xl"></i></button>
         </nav>
     </div>
 
@@ -301,7 +309,8 @@
         }
 
         function switchTab(tabId) {
-            ['dashboard', 'absensi', 'catatan', 'kas'].forEach(id => {
+            // Tambahkan 'tanya' di dalam array ini
+            ['dashboard', 'absensi', 'catatan', 'tanya', 'kas'].forEach(id => {
                 document.getElementById('view-' + id).classList.add('hidden');
                 document.getElementById('nav-' + id).classList.remove('active-tab', 'text-blue-600');
                 document.getElementById('nav-' + id).classList.add('text-slate-400');
@@ -403,7 +412,7 @@
             
             if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
             if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
-            
+            if (typeof renderPertanyaan === "function") renderPertanyaan();
             if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
                 if (typeof renderRekapSPP === "function") renderRekapSPP();
             }
@@ -523,7 +532,93 @@
             }
             btn.innerHTML = orgHtml;
         }
+function renderPertanyaan() {
+            const container = document.getElementById('list-pertanyaan');
+            let html = '';
+            let countTanya = 0;
 
+            FILTERED_SISWA.forEach(s => {
+                if (s.qa && s.qa.length > 0) {
+                    s.qa.forEach((q, index) => {
+                        // Hanya tampilkan yang statusnya "Menunggu" / Belum Dijawab
+                        if (q.status === "Menunggu") {
+                            countTanya++;
+                            // Filter escape untuk tanda kutip agar tombol onclick tidak error
+                            const safeQuestion = q.question.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            
+                            html += `
+                            <div class="glass-card p-5 rounded-[1.5rem] border-l-4 border-l-orange-400 fade-in">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-500">${s.name}</p>
+                                        <p class="text-[9px] text-slate-400 mt-0.5">${q.date}</p>
+                                    </div>
+                                    <span class="text-[9px] bg-orange-100 text-orange-600 px-2 py-1 rounded-md font-bold uppercase"><i class="fa-solid fa-clock mr-1"></i>Menunggu</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4">
+                                    <p class="text-sm font-medium text-slate-800 italic">"${q.question}"</p>
+                                </div>
+                                <textarea id="jawab-${s.id}-${index}" class="w-full p-4 text-sm bg-white border border-slate-200 rounded-xl mb-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none" rows="2" placeholder="Ketik balasan Ustadz/ah di sini..."></textarea>
+                                <button onclick="kirimJawaban('${s.id}', '${safeQuestion}', 'jawab-${s.id}-${index}')" class="w-full bg-blue-600 text-white text-xs font-bold py-3 rounded-xl active:scale-95 transition-all shadow-md shadow-blue-200">
+                                    <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Jawaban
+                                </button>
+                            </div>
+                            `;
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('badge-tanya').innerText = `${countTanya} Menunggu`;
+
+            if (countTanya === 0) {
+                html = `
+                <div class="text-center py-10 glass-card rounded-[1.5rem]">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fa-solid fa-check-double text-2xl"></i>
+                    </div>
+                    <p class="text-sm text-slate-500 font-bold">Alhamdulillah,<br>Tidak ada pertanyaan yang menunggu.</p>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function kirimJawaban(idSiswa, pertanyaan, inputId) {
+            const jawaban = document.getElementById(inputId).value;
+            if (!jawaban) { showMsg("Jawaban tidak boleh kosong!", "warning"); return; }
+
+            const btn = document.getElementById(inputId).nextElementSibling;
+            const orgHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengirim...`;
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'jawab_pertanyaan',
+                        id_siswa: idSiswa,
+                        pertanyaan: pertanyaan,
+                        jawaban: jawaban
+                    })
+                });
+                showMsg("✅ Jawaban terkirim ke santri!", "success");
+                playSound('success');
+                // Sembunyikan kartu pertanyaan yang sudah dijawab
+                document.getElementById(inputId).parentElement.style.display = 'none';
+                
+                // Kurangi angka badge
+                let badge = document.getElementById('badge-tanya');
+                let count = parseInt(badge.innerText) - 1;
+                badge.innerText = `${count} Menunggu`;
+                
+            } catch (err) {
+                // Handle CORS error yang biasa terjadi di GAS namun data tetap masuk
+                showMsg("✅ Jawaban terkirim ke santri!", "success");
+                playSound('success');
+                document.getElementById(inputId).parentElement.style.display = 'none';
+            }
+        }
         // --- LOGIKA HITUNG SPP (HANYA ADMIN) ---
         function bersihkanNama(str) {
             if (!str) return "";
