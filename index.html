@@ -41,7 +41,7 @@
         
         <div class="w-full max-w-sm glass-card p-6 rounded-[2rem]">
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Nama Anda</label>
-            <select id="login-nama-guru" dir="auto" class="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <select id="login-nama-guru" class="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="">Memuat data guru...</option>
             </select>
             
@@ -327,8 +327,9 @@
         }
 
         function formatArabBidi(text) {
+            // Gunakan \u202A (Left-to-Right Embedding) agar teks Latin terkunci di kiri dan Arab di kanan
             if(/[\u0600-\u06FF]/.test(text)) {
-                return '\u202B' + text + '\u202C'; 
+                return '\u202A' + text + '\u202C'; 
             }
             return text;
         }
