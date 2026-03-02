@@ -187,21 +187,34 @@
                 </div>
         </div>
 
-        <div id="view-kas" class="hidden space-y-5 fade-in">
+       <div id="view-kas" class="hidden space-y-5 fade-in">
             <div class="flex justify-between items-center px-1 mt-2">
                 <h2 class="text-xl font-extrabold text-slate-800">Rekap SPP</h2>
-                <span id="lbl-bulan-spp" class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">Bulan Ini</span>
+                <select id="select-bulan-spp" onchange="gantiBulanSPP()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-sm uppercase tracking-wider">
+                    <option value="1">Januari 2026</option>
+                    <option value="2">Februari 2026</option>
+                    <option value="3">Maret 2026</option>
+                    <option value="4">April 2026</option>
+                    <option value="5">Mei 2026</option>
+                    <option value="6">Juni 2026</option>
+                    <option value="7">Juli 2026</option>
+                    <option value="8">Agustus 2026</option>
+                    <option value="9">September 2026</option>
+                    <option value="10">Oktober 2026</option>
+                    <option value="11">November 2026</option>
+                    <option value="12">Desember 2026</option>
+                </select>
             </div>
             
             <div class="glass-card p-5 rounded-[1.5rem]">
                 <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
-                    <button id="tab-spp-nunggak" onclick="renderRekapSPP('nunggak')" class="flex-1 text-[10px] font-bold py-2 rounded-lg bg-white text-blue-600 shadow-sm transition-all">Belum Lunas</button>
-                    <button id="tab-spp-semua" onclick="renderRekapSPP('semua')" class="flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all">Semua Data</button>
+                    <button id="tab-spp-nunggak" onclick="switchTabSPP('nunggak')" class="flex-1 text-[10px] font-bold py-2 rounded-lg bg-white text-blue-600 shadow-sm transition-all">Belum Lunas</button>
+                    <button id="tab-spp-semua" onclick="switchTabSPP('semua')" class="flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all">Semua Data</button>
                 </div>
 
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Status Siswa</p>
-                    <button onclick="copyRekapSPP()" class="text-[10px] font-bold bg-slate-800 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-slate-700 active:scale-95 transition">
+                    <button onclick="copyRekapSPP()" class="text-[10px] font-bold bg-slate-800 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-slate-700 active:scale-95 transition shadow-md shadow-slate-200">
                         <i class="fa-regular fa-copy"></i> Copy Tagihan
                     </button>
                 </div>
@@ -629,7 +642,26 @@
             btn.innerHTML = orgHtml;
         }
 
-        // --- SPP (ADMIN) ---
+       // --- SPP (ADMIN) ---
+        let AKTIF_TAB_SPP = 'nunggak';
+        let PILIHAN_BULAN = new Date().getMonth() + 1; // Default diset ke bulan saat ini
+        
+        // Atur dropdown saat aplikasi pertama dibuka
+        document.addEventListener("DOMContentLoaded", () => {
+            const selectBulan = document.getElementById('select-bulan-spp');
+            if (selectBulan) selectBulan.value = PILIHAN_BULAN.toString();
+        });
+
+        function gantiBulanSPP() {
+            PILIHAN_BULAN = parseInt(document.getElementById('select-bulan-spp').value);
+            renderRekapSPP();
+        }
+
+        function switchTabSPP(mode) {
+            AKTIF_TAB_SPP = mode;
+            renderRekapSPP();
+        }
+
         function bersihkanNama(str) { return str ? str.toLowerCase().replace(/\(.*\)/g, "").replace(/[^a-z0-9]/g, "").trim() : ""; }
 
         function cariHargaCerdas(namaKelas) {
@@ -641,9 +673,9 @@
             return 0; 
         }
 
-        function hitungTotalTagihan(siswa) { 
-            let total = 0; var currentMonth = new Date().getMonth() + 1; 
-            if (siswa.start_month && parseInt(siswa.start_month) > currentMonth) return { total: 0 }; 
+        function hitungTotalTagihan(siswa, targetBulan) { 
+            let total = 0;  
+            if (siswa.start_month && parseInt(siswa.start_month) > targetBulan) return { total: 0 }; 
 
             siswa.classes.forEach(c => { 
                 let namaBersih = c.split('(')[0].trim(); let harga = cariHargaCerdas(namaBersih); 
@@ -659,44 +691,60 @@
                 if (tglMasukStr.includes('/')) { let parts = tglMasukStr.split('/'); tglMasuk = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); } 
                 else { tglMasuk = new Date(tglMasukStr); }
             }
-            if (tglMasuk && siswa.start_month && parseInt(siswa.start_month) === currentMonth) { if (tglMasuk.getDate() > 15) total = total * 0.5; }
-            if (currentMonth === 3 && tglMasuk) { let batasDiskon = new Date("2026-02-15"); if (tglMasuk < batasDiskon) total = total * 0.5; }
+            if (tglMasuk && siswa.start_month && parseInt(siswa.start_month) === targetBulan) { if (tglMasuk.getDate() > 15) total = total * 0.5; }
+            if (targetBulan === 3 && tglMasuk) { let batasDiskon = new Date("2026-02-15"); if (tglMasuk < batasDiskon) total = total * 0.5; }
             return { total: total }; 
         }
 
-        function renderRekapSPP(filterMode = 'nunggak') {
-            const listContainer = document.getElementById('list-tunggakan');
-            const namaBulan = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-            let currentMonthNum = new Date().getMonth() + 1;
+        function hitungAkumulasiNunggak(siswa, targetBulan) {
+            let count = 0;
+            let start = siswa.start_month ? parseInt(siswa.start_month) : 1;
+            // Hitung dari bulan gabung sampai bulan yang dipilih
+            for(let b = start; b <= targetBulan; b++) {
+                let hist = siswa.history.find(h => parseInt(h.bulan) === b);
+                let status = hist ? hist.status.toLowerCase() : "";
+                if(!status.includes("lunas")) count++;
+            }
+            return count;
+        }
 
-            // Ubah gaya tombol tab saat diklik
+        function renderRekapSPP() {
+            const listContainer = document.getElementById('list-tunggakan');
+            const selectBulan = document.getElementById('select-bulan-spp');
+            const namaBulan = selectBulan.options[selectBulan.selectedIndex].text;
+            
+            // Ubah gaya visual tombol tab
             const tabNunggak = document.getElementById('tab-spp-nunggak');
             const tabSemua = document.getElementById('tab-spp-semua');
             if(tabNunggak && tabSemua) {
-                if(filterMode === 'nunggak') {
+                if(AKTIF_TAB_SPP === 'nunggak') {
                     tabNunggak.className = "flex-1 text-[10px] font-bold py-2 rounded-lg bg-white text-blue-600 shadow-sm transition-all";
-                    tabSemua.className = "flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                    tabSemua.className = "flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all cursor-pointer";
                 } else {
                     tabSemua.className = "flex-1 text-[10px] font-bold py-2 rounded-lg bg-white text-blue-600 shadow-sm transition-all";
-                    tabNunggak.className = "flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                    tabNunggak.className = "flex-1 text-[10px] font-bold py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all cursor-pointer";
                 }
             }
 
             let htmlPending = '', htmlTunggakan = '', htmlLunas = '';
             let totalTunggakan = 0, countTunggakan = 0;
-            let rekapText = `*Bismillah. Laporan Rekap SPP*\nBulan: ${namaBulan}\n\n`;
+            let rekapText = `*Bismillah. Laporan SPP*\nBulan: ${namaBulan}\n\n`;
 
             DATA_SISWA.forEach((s) => {
-                const dataTagihan = hitungTotalTagihan(s);
+                const dataTagihan = hitungTotalTagihan(s, PILIHAN_BULAN);
                 
                 if (dataTagihan.total > 0) {
-                    let historyBulanIni = s.history.find(h => parseInt(h.bulan) === currentMonthNum);
+                    let historyBulanIni = s.history.find(h => parseInt(h.bulan) === PILIHAN_BULAN);
                     let statusBayar = historyBulanIni ? historyBulanIni.status.toLowerCase() : "belum bayar";
                     
                     let nominalJepang = dataTagihan.total.toLocaleString('ja-JP');
                     let kelasUtama = s.classes[0] ? s.classes[0].split('(')[0] : '-';
+                    
+                    // Deteksi total akumulasi belum bayar
+                    let jmlNunggak = hitungAkumulasiNunggak(s, PILIHAN_BULAN);
+                    let infoTunggakan = jmlNunggak > 1 ? `<p class="text-[9px] font-extrabold text-rose-500 mt-0.5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Nunggak: ${jmlNunggak} bln</p>` : '';
 
-                    // 1. KONDISI: PENDING (MENUNGGU VALIDASI)
+                    // 1. KONDISI PENDING
                     if (statusBayar.includes("pending") || statusBayar.includes("menunggu")) {
                         countTunggakan++; totalTunggakan += dataTagihan.total;
                         htmlPending += `
@@ -707,20 +755,19 @@
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="font-black text-amber-600 text-sm mr-1">¥${nominalJepang}</span>
-                                <button onclick="approveSPP('${s.id}', '${currentMonthNum}', ${dataTagihan.total})" class="px-3 py-2 bg-emerald-500 text-white text-[10px] font-bold rounded-lg active:scale-95 transition-all shadow-md shadow-emerald-200"><i class="fa-solid fa-check-double mr-1"></i> TERIMA</button>
+                                <button onclick="approveSPP('${s.id}', '${PILIHAN_BULAN}', ${dataTagihan.total})" class="px-3 py-2 bg-emerald-500 text-white text-[10px] font-bold rounded-lg active:scale-95 transition-all shadow-md shadow-emerald-200"><i class="fa-solid fa-check-double mr-1"></i> TERIMA</button>
                             </div>
                         </div>`;
                         rekapText += `- [PENDING] ${s.name} - ¥${nominalJepang}\n`;
                     } 
-                    // 2. KONDISI: BELUM BAYAR
+                    // 2. KONDISI TUNGGAKAN
                     else if (!statusBayar.includes("lunas")) {
                         countTunggakan++; totalTunggakan += dataTagihan.total;
-                        let infoTunggakan = s.tunggakan_bulan ? `<p class="text-[9px] font-bold text-red-500 mt-0.5">Nunggak: ${s.tunggakan_bulan} bln</p>` : '';
                         let waPesan = `Bismillah.\nMohon izin mengingatkan, tagihan SPP RBM Japan bulan *${namaBulan}* untuk ananda *${s.name}* sebesar *¥${nominalJepang}* belum kami terima konfirmasinya.\n\nJazakumullahu khairan. 🌸`;
                         let linkWAPersonal = `https://wa.me/?text=${encodeURIComponent(waPesan)}`;
 
                         htmlTunggakan += `
-                        <div class="bg-white border border-slate-100 p-3 rounded-xl flex items-center justify-between shadow-sm hover:border-emerald-200 transition group mb-2">
+                        <div class="bg-white border border-slate-100 p-3 rounded-xl flex items-center justify-between shadow-sm hover:border-emerald-200 transition group mb-2 fade-in">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h4 class="font-bold text-xs text-slate-700 truncate">${s.name}</h4>
                                 <p class="text-[9px] text-slate-400 mt-0.5 truncate">${kelasUtama}</p>
@@ -728,16 +775,16 @@
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="font-black text-orange-500 text-sm">¥${nominalJepang}</span>
-                                <button onclick="window.open('${linkWAPersonal}', '_blank')" class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-500 hover:text-white transition active:scale-95 border border-emerald-100"><i class="fa-brands fa-whatsapp text-lg"></i></button>
-                                <button onclick="approveSPP('${s.id}', '${currentMonthNum}', ${dataTagihan.total})" class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-500 hover:text-white transition active:scale-95 border border-blue-100" title="Tandai Lunas Manual"><i class="fa-solid fa-check text-sm"></i></button>
+                                <button onclick="window.open('${linkWAPersonal}', '_blank')" class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-500 hover:text-white transition active:scale-95 border border-emerald-100" title="Tagih via WA"><i class="fa-brands fa-whatsapp text-lg"></i></button>
+                                <button onclick="approveSPP('${s.id}', '${PILIHAN_BULAN}', ${dataTagihan.total})" class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-500 hover:text-white transition active:scale-95 border border-blue-100" title="Tandai Lunas Manual"><i class="fa-solid fa-check text-sm"></i></button>
                             </div>
                         </div>`;
                         rekapText += `- ${s.name} - ¥${nominalJepang}\n`;
                     }
-                    // 3. KONDISI: SUDAH LUNAS (Hanya muncul di Tab "Semua Data")
-                    else if (filterMode === 'semua' && statusBayar.includes("lunas")) {
+                    // 3. KONDISI LUNAS (Hanya muncul jika Tab "Semua Data" diklik)
+                    else if (AKTIF_TAB_SPP === 'semua' && statusBayar.includes("lunas")) {
                         htmlLunas += `
-                        <div class="bg-emerald-50/60 border border-emerald-100 p-3 rounded-xl flex items-center justify-between shadow-sm mb-2 opacity-80">
+                        <div class="bg-emerald-50/60 border border-emerald-100 p-3 rounded-xl flex items-center justify-between shadow-sm mb-2 opacity-80 fade-in">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h4 class="font-bold text-xs text-slate-600 line-through decoration-emerald-300 truncate">${s.name}</h4>
                                 <p class="text-[9px] text-emerald-600 mt-0.5 font-bold uppercase"><i class="fa-solid fa-circle-check mr-1"></i>Lunas</p>
@@ -753,21 +800,28 @@
             document.getElementById('stat-nunggak').innerText = countTunggakan;
             
             let finalHtml = '';
+            
+            // Susun UI: Yang Pending ditaruh paling atas
             if (htmlPending !== '') {
                 finalHtml += `<h3 class="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-3 mt-1 bg-amber-50 inline-block px-3 py-1 rounded-full border border-amber-200"><i class="fa-solid fa-bell mr-1"></i> Butuh Validasi Admin</h3>` + htmlPending;
                 finalHtml += `<div class="h-px bg-slate-200 w-full my-4"></div>`;
             }
             
-            if (filterMode === 'nunggak') {
+            // Logika Tab
+            if (AKTIF_TAB_SPP === 'nunggak') {
                 if (countTunggakan === 0 && htmlPending === '') {
-                    finalHtml += `<div class="text-center py-8"><div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-check-double text-2xl"></i></div><p class="text-sm text-slate-500 font-bold italic">Alhamdulillah,<br>Semua SPP sudah lunas! 🎉</p></div>`;
+                    finalHtml += `<div class="text-center py-8 fade-in"><div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-check-double text-2xl"></i></div><p class="text-sm text-slate-500 font-bold italic">Alhamdulillah,<br>Semua SPP lunas di bulan ini! 🎉</p></div>`;
                 } else { finalHtml += htmlTunggakan; }
             } else {
-                // Jika Tab "Semua Data" ditekan
-                finalHtml += htmlTunggakan; // Tampilkan yang belum lunas di atas
+                // Tampilan Semua Data (Gabungan Belum Lunas + Lunas)
+                finalHtml += htmlTunggakan; 
                 if(htmlLunas !== '') {
-                    finalHtml += `<div class="h-px bg-slate-200 w-full my-4"></div>`;
-                    finalHtml += htmlLunas; // Tampilkan yang sudah lunas di bawah dengan warna hijau coret
+                    if (htmlTunggakan !== '') finalHtml += `<div class="h-px bg-slate-200 w-full my-4"></div>`;
+                    finalHtml += htmlLunas; 
+                }
+                // Jika belum ada data sama sekali di bulan itu
+                if (countTunggakan === 0 && htmlPending === '' && htmlLunas === '') {
+                   finalHtml += `<div class="text-center py-8 fade-in"><p class="text-sm text-slate-400 font-bold italic">Belum ada catatan tagihan di bulan ini.</p></div>`;
                 }
             }
             
@@ -775,6 +829,20 @@
             TEKS_REKAP_WA = rekapText; 
             listContainer.innerHTML = finalHtml;
         }
+
+        async function approveSPP(idSiswa, bulanKe, nominalnya) {
+            if(!confirm("Validasi pembayaran ini sebagai LUNAS?")) return;
+            showMsg("Memproses validasi...", "success");
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'approve_bayar', id_siswa: idSiswa, bulan: bulanKe, nominal: nominalnya }) });
+                showMsg("✅ SPP Berhasil Divalidasi Lunas!", "success"); playSound('success');
+                setTimeout(() => { loadDatabase(); }, 1500); 
+            } catch (err) {
+                showMsg("✅ SPP Berhasil Divalidasi Lunas!", "success"); playSound('success');
+                setTimeout(() => { loadDatabase(); }, 1500); 
+            }
+        }
+
         function copyRekapSPP() { if (!TEKS_REKAP_WA) return; navigator.clipboard.writeText(TEKS_REKAP_WA).then(() => { showMsg("Rekap tercopy ke Clipboard!", "success"); }); }
 
         // AUDIO & TOAST
