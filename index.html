@@ -144,8 +144,11 @@
             <div id="santri-container" class="space-y-3"></div>
         </div>
 
-        <div id="view-catatan" class="hidden space-y-5 fade-in">
-            <h2 class="text-xl font-extrabold text-slate-800 px-1 mt-2">Catatan & Nilai Rapor</h2>
+       <div id="view-catatan" class="hidden space-y-5 fade-in">
+            <div class="flex items-center justify-between px-1 mt-2">
+                <h2 class="text-xl font-extrabold text-slate-800">Catatan & Nilai</h2>
+                <input type="date" id="input-tgl-catatan" class="p-2 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+            </div>
             <div class="glass-card p-5 rounded-[1.5rem]">
                 <div class="space-y-4">
                     <div>
@@ -571,13 +574,16 @@
             }
         }
 
-        async function kirimCatatan() {
+       async function kirimCatatan() {
             const selectEl = document.getElementById('inputCatatanNama');
             const idSiswa = selectEl.value;
             const namaSiswa = selectEl.options[selectEl.selectedIndex].text;
             const nilai = document.getElementById('inputNilai').value;
             const pertemuan = document.getElementById('inputPertemuan').value;
             const pesan = document.getElementById('inputPesan').value;
+            
+            // [BARU] Ambil value tanggal dari kalender UI
+            const tglCatatan = document.getElementById('input-tgl-catatan').value;
 
             if(!idSiswa || !nilai || !pesan) { showMsg("Mohon lengkapi semua kolom!", "warning"); return; }
             
@@ -586,7 +592,19 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
             
             try {
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'input_nilai', id_siswa: idSiswa, nama_siswa: namaSiswa, nama_guru: LOGGED_IN_TEACHER, nilai: nilai, pertemuan: pertemuan, pesan: pesan }) });
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'input_nilai', 
+                        id_siswa: idSiswa, 
+                        nama_siswa: namaSiswa, 
+                        nama_guru: LOGGED_IN_TEACHER, 
+                        nilai: nilai, 
+                        pertemuan: pertemuan, 
+                        pesan: pesan,
+                        tanggal_catatan: tglCatatan // [BARU] Kirim tanggal ke backend
+                    }) 
+                });
                 showMsg(`✅ Catatan rapor terkirim!`, 'success'); playSound('success');
                 document.getElementById('inputNilai').value = ''; document.getElementById('inputPertemuan').value = ''; document.getElementById('inputPesan').value = ''; selectEl.value = '';
             } catch (err) {
