@@ -26,7 +26,7 @@
 <body class="max-w-md mx-auto bg-slate-100 h-[100dvh] flex flex-col relative overflow-hidden shadow-2xl">
 
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+        // URL Apps Script Anda
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2a5-sm2_gLBPF5jpTmZfBuN9PppkvUI3nXIyOJbYJ4XDZA3SDE7-FNU784ZxfSZjr/exec";
     </script>
 
@@ -93,14 +93,7 @@
                     </div>
                 </div>
             </div>
-<div id="view-tanya" class="hidden space-y-5 fade-in">
-            <div class="flex justify-between items-center px-1 mt-2">
-                <h2 class="text-xl font-extrabold text-slate-800">Pertanyaan Santri</h2>
-                <span id="badge-tanya" class="text-[10px] font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full uppercase tracking-wider">0 Menunggu</span>
-            </div>
-            <div id="list-pertanyaan" class="space-y-4">
-                </div>
-        </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div class="glass-card p-5 rounded-[1.5rem] border border-white">
                     <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-3 text-blue-600"><i class="fa-solid fa-users"></i></div>
@@ -119,6 +112,10 @@
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="switchTab('absensi')" class="glass-card p-4 rounded-[1.25rem] active:scale-95 transition-all text-left">
                         <i class="fa-solid fa-calendar-day text-2xl text-blue-500 mb-3"></i><p class="font-bold text-sm text-slate-800">Absensi</p>
+                    </button>
+                    <button onclick="switchTab('tanya')" class="glass-card p-4 rounded-[1.25rem] active:scale-95 transition-all text-left relative">
+                        <span id="badge-cepat-tanya" class="absolute top-3 right-3 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md hidden">0</span>
+                        <i class="fa-solid fa-comments text-2xl text-orange-500 mb-3"></i><p class="font-bold text-sm text-slate-800">Tanya Jawab</p>
                     </button>
                     <button onclick="switchTab('catatan')" class="glass-card p-4 rounded-[1.25rem] active:scale-95 transition-all text-left">
                         <i class="fa-solid fa-clipboard-list text-2xl text-indigo-500 mb-3"></i><p class="font-bold text-sm text-slate-800">Input Nilai</p>
@@ -178,6 +175,15 @@
             </div>
         </div>
 
+        <div id="view-tanya" class="hidden space-y-5 fade-in">
+            <div class="flex justify-between items-center px-1 mt-2">
+                <h2 class="text-xl font-extrabold text-slate-800">Pertanyaan Santri</h2>
+                <span id="badge-tanya" class="text-[10px] font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full uppercase tracking-wider">0 Menunggu</span>
+            </div>
+            <div id="list-pertanyaan" class="space-y-4">
+                </div>
+        </div>
+
         <div id="view-kas" class="hidden space-y-5 fade-in">
             <div class="flex justify-between items-center px-1 mt-2">
                 <h2 class="text-xl font-extrabold text-slate-800">Rekap SPP</h2>
@@ -203,7 +209,7 @@
     </div>
 
     <div class="fixed bottom-0 w-full max-w-md bg-transparent z-40 p-5 pb-6 pointer-events-none" id="bottom-nav" style="display:none;">
-       <nav class="bg-white/95 backdrop-blur-xl border border-slate-200/60 flex justify-around rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] pointer-events-auto overflow-hidden">
+        <nav class="bg-white/95 backdrop-blur-xl border border-slate-200/60 flex justify-around rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] pointer-events-auto overflow-hidden">
             <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center py-4 px-1 active-tab text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-house text-xl"></i></button>
             <button onclick="switchTab('absensi')" id="nav-absensi" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-calendar-check text-xl"></i></button>
             <button onclick="switchTab('catatan')" id="nav-catatan" class="flex flex-col items-center py-4 px-1 text-slate-400 flex-1 transition-colors"><i class="fa-solid fa-clipboard-list text-xl"></i></button>
@@ -222,12 +228,10 @@
         let LOGGED_IN_TEACHER = ""; 
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Set Tanggal Absen Default ke Hari Ini
             const dateInput = document.getElementById('input-tgl-absen');
             const today = new Date();
             dateInput.valueAsDate = today;
 
-            // Generate Tanggal Hijriah
             try {
                 const hijriFormatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
                 document.getElementById('tgl-hijriah').innerText = hijriFormatter.format(today);
@@ -246,7 +250,7 @@
             loadDatabase();
         });
 
-        // --- SISTEM LOGIN GURU DENGAN PIN DB ---
+        // --- SISTEM LOGIN ---
         function prosesLogin() {
             const nama = document.getElementById('login-nama-guru').value;
             const pinInput = document.getElementById('login-pin').value;
@@ -270,7 +274,7 @@
 
             const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
             if (String(pinGuru) !== String(pinInput)) {
-                showMsg("PIN Salah! Cek kembali di Spreadsheet.", "warning"); return; 
+                showMsg("PIN Salah! Cek kembali.", "warning"); return; 
             }
             
             LOGGED_IN_TEACHER = typeof guruValid === 'string' ? guruValid : guruValid.nama;
@@ -309,7 +313,6 @@
         }
 
         function switchTab(tabId) {
-            // Tambahkan 'tanya' di dalam array ini
             ['dashboard', 'absensi', 'catatan', 'tanya', 'kas'].forEach(id => {
                 document.getElementById('view-' + id).classList.add('hidden');
                 document.getElementById('nav-' + id).classList.remove('active-tab', 'text-blue-600');
@@ -320,22 +323,19 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-        // FUNGSI MEMPERBAIKI TEKS ARAB DI DROPDOWN
         function formatArabBidi(text) {
-            // Jika mengandung huruf Arab, bungkus dengan kode Unicode Right-to-Left Embedding (RLE)
             if(/[\u0600-\u06FF]/.test(text)) {
                 return '\u202B' + text + '\u202C'; 
             }
             return text;
         }
 
-        // --- FETCH DATA (DENGAN CACHE LOKAL) ---
+        // --- FETCH DATA ---
         async function loadDatabase() {
             const selectGuru = document.getElementById('login-nama-guru');
             selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
             selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
 
-            // 1. Coba ambil dari Local Storage dulu (Offline First = Instan)
             const cachedData = localStorage.getItem('rbm_data_cache');
             if(cachedData) {
                 try {
@@ -347,14 +347,11 @@
             if(!LOGGED_IN_TEACHER && !cachedData) document.getElementById('login-loader').classList.remove('hidden');
 
             try {
-                // 2. Fetch data terbaru di background
                 const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
                 
-                // Simpan ke cache untuk reload berikutnya
                 localStorage.setItem('rbm_data_cache', JSON.stringify(result));
                 
-                // Perbarui UI dengan data segar
                 selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
                 selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
                 prosesDataKeUI(result, selectGuru);
@@ -376,7 +373,6 @@
                 DATA_GURU_ALL.forEach(g => {
                     let namaGuru = typeof g === 'string' ? g : g.nama;
                     if (namaGuru !== "Admin RBM (Wahyu)") {
-                        // Aplikasikan perbaikan BiDi Arab di sini
                         let namaTampil = formatArabBidi(namaGuru);
                         selectGuru.innerHTML += `<option value="${namaGuru}">${namaTampil}</option>`;
                     }
@@ -396,7 +392,6 @@
             }
         }
 
-        // --- FILTER MURID CERDAS ---
         function saringMuridBerdasarkanAkses() {
             if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
                 FILTERED_SISWA = [...DATA_SISWA]; 
@@ -413,6 +408,7 @@
             if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
             if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
             if (typeof renderPertanyaan === "function") renderPertanyaan();
+            
             if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
                 if (typeof renderRekapSPP === "function") renderRekapSPP();
             }
@@ -420,10 +416,8 @@
 
         function populateCatatanDropdown(data) {
             const select = document.getElementById('inputCatatanNama');
-            select.innerHTML = '<option value="">-- Pilih Santri di Kelas Anda --</option>';
-            data.forEach(s => {
-                select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-            });
+            select.innerHTML = '<option value="">-- Pilih Santri --</option>';
+            data.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
         }
 
         function renderSantri(data) {
@@ -463,76 +457,8 @@
             renderSantri(FILTERED_SISWA.filter(s => s.name && s.name.toLowerCase().includes(e.target.value.toLowerCase())));
         });
 
-        // --- FITUR INPUT KE SPREADSHEET ---
-        async function kirimAbsen(id, nama, status) {
-            const tglAbsen = document.getElementById('input-tgl-absen').value; // Mengambil tanggal dinamis
-            
-            showMsg(`Memproses absen ${nama}...`, 'success');
-            try {
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'absen_admin', 
-                        id: id, 
-                        status: status,
-                        guru: LOGGED_IN_TEACHER,
-                        tanggal_absen: tglAbsen // Data ini dikirim ke backend
-                    }) 
-                });
-                showMsg(`✅ Absen tersimpan!`, 'success');
-                playSound('success');
-            } catch (err) {
-                // Sering terjadi CORS pada script GAS jika tidak diatur benar, namun aksi POST tetap jalan
-                showMsg(`✅ Absen tersimpan!`, 'success'); 
-                playSound('success');
-            }
-        }
-
-        async function kirimCatatan() {
-            const selectEl = document.getElementById('inputCatatanNama');
-            const idSiswa = selectEl.value;
-            const namaSiswa = selectEl.options[selectEl.selectedIndex].text;
-            
-            const nilai = document.getElementById('inputNilai').value;
-            const pertemuan = document.getElementById('inputPertemuan').value;
-            const pesan = document.getElementById('inputPesan').value;
-
-            if(!idSiswa || !nilai || !pesan) { showMsg("Mohon lengkapi semua kolom!", "warning"); return; }
-            
-            const btn = document.getElementById('btn-submit-catatan');
-            const orgHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
-            
-            try {
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'input_nilai', 
-                        id_siswa: idSiswa, 
-                        nama_siswa: namaSiswa,
-                        nama_guru: LOGGED_IN_TEACHER,
-                        nilai: nilai, 
-                        pertemuan: pertemuan, 
-                        pesan: pesan 
-                    }) 
-                });
-                showMsg(`✅ Catatan rapor terkirim!`, 'success');
-                playSound('success');
-                
-                document.getElementById('inputNilai').value = '';
-                document.getElementById('inputPertemuan').value = '';
-                document.getElementById('inputPesan').value = '';
-                selectEl.value = '';
-            } catch (err) {
-                showMsg(`✅ Catatan rapor terkirim!`, 'success'); 
-                playSound('success');
-                document.getElementById('inputNilai').value = '';
-                document.getElementById('inputPertemuan').value = '';
-                document.getElementById('inputPesan').value = '';
-            }
-            btn.innerHTML = orgHtml;
-        }
-function renderPertanyaan() {
+        // --- RENDER PERTANYAAN (BARU) ---
+        function renderPertanyaan() {
             const container = document.getElementById('list-pertanyaan');
             let html = '';
             let countTanya = 0;
@@ -540,11 +466,9 @@ function renderPertanyaan() {
             FILTERED_SISWA.forEach(s => {
                 if (s.qa && s.qa.length > 0) {
                     s.qa.forEach((q, index) => {
-                        // Hanya tampilkan yang statusnya "Menunggu" / Belum Dijawab
                         if (q.status === "Menunggu") {
                             countTanya++;
-                            // Filter escape untuk tanda kutip agar tombol onclick tidak error
-                            const safeQuestion = q.question.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            const safeQuestion = (q.question || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                             
                             html += `
                             <div class="glass-card p-5 rounded-[1.5rem] border-l-4 border-l-orange-400 fade-in">
@@ -570,6 +494,17 @@ function renderPertanyaan() {
             });
 
             document.getElementById('badge-tanya').innerText = `${countTanya} Menunggu`;
+            
+            // Tampilkan titik merah di dashboard jika ada pertanyaan
+            const badgeCepat = document.getElementById('badge-cepat-tanya');
+            if (badgeCepat) {
+                if (countTanya > 0) {
+                    badgeCepat.innerText = countTanya;
+                    badgeCepat.classList.remove('hidden');
+                } else {
+                    badgeCepat.classList.add('hidden');
+                }
+            }
 
             if (countTanya === 0) {
                 html = `
@@ -577,7 +512,7 @@ function renderPertanyaan() {
                     <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fa-solid fa-check-double text-2xl"></i>
                     </div>
-                    <p class="text-sm text-slate-500 font-bold">Alhamdulillah,<br>Tidak ada pertanyaan yang menunggu.</p>
+                    <p class="text-sm text-slate-500 font-bold">Alhamdulillah,<br>Tidak ada pertanyaan baru.</p>
                 </div>`;
             }
 
@@ -602,104 +537,114 @@ function renderPertanyaan() {
                         jawaban: jawaban
                     })
                 });
-                showMsg("✅ Jawaban terkirim ke santri!", "success");
-                playSound('success');
-                // Sembunyikan kartu pertanyaan yang sudah dijawab
-                document.getElementById(inputId).parentElement.style.display = 'none';
-                
-                // Kurangi angka badge
-                let badge = document.getElementById('badge-tanya');
-                let count = parseInt(badge.innerText) - 1;
-                badge.innerText = `${count} Menunggu`;
-                
+                suksesKirimTanya(inputId);
             } catch (err) {
-                // Handle CORS error yang biasa terjadi di GAS namun data tetap masuk
-                showMsg("✅ Jawaban terkirim ke santri!", "success");
-                playSound('success');
-                document.getElementById(inputId).parentElement.style.display = 'none';
+                suksesKirimTanya(inputId);
             }
         }
-        // --- LOGIKA HITUNG SPP (HANYA ADMIN) ---
-        function bersihkanNama(str) {
-            if (!str) return "";
-            return str.toLowerCase().replace(/\(.*\)/g, "").replace(/[^a-z0-9]/g, "").trim();
+        
+        function suksesKirimTanya(inputId) {
+            showMsg("✅ Jawaban terkirim!", "success");
+            playSound('success');
+            document.getElementById(inputId).parentElement.style.display = 'none';
+            
+            let badge = document.getElementById('badge-tanya');
+            let count = parseInt(badge.innerText) - 1;
+            badge.innerText = `${count} Menunggu`;
+            
+            const badgeCepat = document.getElementById('badge-cepat-tanya');
+            if(badgeCepat) {
+                if(count > 0) { badgeCepat.innerText = count; } 
+                else { badgeCepat.classList.add('hidden'); }
+            }
         }
+
+        // --- FITUR POST LAINNYA ---
+        async function kirimAbsen(id, nama, status) {
+            const tglAbsen = document.getElementById('input-tgl-absen').value; 
+            showMsg(`Memproses absen ${nama}...`, 'success');
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'absen_admin', id: id, status: status, guru: LOGGED_IN_TEACHER, tanggal_absen: tglAbsen }) });
+                showMsg(`✅ Absen tersimpan!`, 'success'); playSound('success');
+            } catch (err) {
+                showMsg(`✅ Absen tersimpan!`, 'success'); playSound('success');
+            }
+        }
+
+        async function kirimCatatan() {
+            const selectEl = document.getElementById('inputCatatanNama');
+            const idSiswa = selectEl.value;
+            const namaSiswa = selectEl.options[selectEl.selectedIndex].text;
+            const nilai = document.getElementById('inputNilai').value;
+            const pertemuan = document.getElementById('inputPertemuan').value;
+            const pesan = document.getElementById('inputPesan').value;
+
+            if(!idSiswa || !nilai || !pesan) { showMsg("Mohon lengkapi semua kolom!", "warning"); return; }
+            
+            const btn = document.getElementById('btn-submit-catatan');
+            const orgHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
+            
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'input_nilai', id_siswa: idSiswa, nama_siswa: namaSiswa, nama_guru: LOGGED_IN_TEACHER, nilai: nilai, pertemuan: pertemuan, pesan: pesan }) });
+                showMsg(`✅ Catatan rapor terkirim!`, 'success'); playSound('success');
+                document.getElementById('inputNilai').value = ''; document.getElementById('inputPertemuan').value = ''; document.getElementById('inputPesan').value = ''; selectEl.value = '';
+            } catch (err) {
+                showMsg(`✅ Catatan rapor terkirim!`, 'success'); playSound('success');
+                document.getElementById('inputNilai').value = ''; document.getElementById('inputPertemuan').value = ''; document.getElementById('inputPesan').value = '';
+            }
+            btn.innerHTML = orgHtml;
+        }
+
+        // --- SPP (ADMIN) ---
+        function bersihkanNama(str) { return str ? str.toLowerCase().replace(/\(.*\)/g, "").replace(/[^a-z0-9]/g, "").trim() : ""; }
 
         function cariHargaCerdas(namaKelas) {
             if (!namaKelas) return 0;
             const target = bersihkanNama(namaKelas);
             if (DATA_HARGA[target]) return DATA_HARGA[target];
-
             const keys = Object.keys(DATA_HARGA).sort((a, b) => b.length - a.length);
-            for (let key of keys) {
-                const cleanKey = bersihkanNama(key);
-                if (cleanKey !== "" && target.includes(cleanKey)) return DATA_HARGA[key];
-            }
+            for (let key of keys) { const cleanKey = bersihkanNama(key); if (cleanKey !== "" && target.includes(cleanKey)) return DATA_HARGA[key]; }
             return 0; 
         }
 
         function hitungTotalTagihan(siswa) { 
-            let total = 0; 
-            var currentMonth = new Date().getMonth() + 1; 
-
+            let total = 0; var currentMonth = new Date().getMonth() + 1; 
             if (siswa.start_month && parseInt(siswa.start_month) > currentMonth) return { total: 0 }; 
 
             siswa.classes.forEach(c => { 
-                let namaBersih = c.split('(')[0].trim(); 
-                let harga = cariHargaCerdas(namaBersih); 
+                let namaBersih = c.split('(')[0].trim(); let harga = cariHargaCerdas(namaBersih); 
                 if (harga === 0 && namaBersih.includes("Muslimah MHSH")) harga = cariHargaCerdas("Muslimah MHSH") || 3000; 
                 if (namaBersih.toLowerCase().includes("muslimah mhsh") && harga > 0) harga = harga - 1000; 
                 if(harga > 0) total += harga; 
             }); 
 
-            let anakKe = parseInt(siswa.role) || 1;
-            if (anakKe == 2) total = total * 0.5; 
-
+            let anakKe = parseInt(siswa.role) || 1; if (anakKe == 2) total = total * 0.5; 
             let tglMasuk = null;
             if (siswa.tanggal_masuk) {
                 let tglMasukStr = siswa.tanggal_masuk.toString();
-                if (tglMasukStr.includes('/')) {
-                    let parts = tglMasukStr.split('/'); 
-                    tglMasuk = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                } else {
-                    tglMasuk = new Date(tglMasukStr);
-                }
+                if (tglMasukStr.includes('/')) { let parts = tglMasukStr.split('/'); tglMasuk = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); } 
+                else { tglMasuk = new Date(tglMasukStr); }
             }
-
-            if (tglMasuk && siswa.start_month && parseInt(siswa.start_month) === currentMonth) {
-                if (tglMasuk.getDate() > 15) total = total * 0.5; 
-            }
-
-            if (currentMonth === 3 && tglMasuk) {
-                let batasDiskon = new Date("2026-02-15"); 
-                if (tglMasuk < batasDiskon) total = total * 0.5;
-            }
-
+            if (tglMasuk && siswa.start_month && parseInt(siswa.start_month) === currentMonth) { if (tglMasuk.getDate() > 15) total = total * 0.5; }
+            if (currentMonth === 3 && tglMasuk) { let batasDiskon = new Date("2026-02-15"); if (tglMasuk < batasDiskon) total = total * 0.5; }
             return { total: total }; 
         }
 
         function renderRekapSPP() {
             const listContainer = document.getElementById('list-tunggakan');
             const namaBulan = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-
-            let htmlList = '';
-            let totalTunggakan = 0;
-            let countTunggakan = 0;
-            let rekapText = `*Bismillah. Laporan Rekap SPP (Belum Lunas)*\nBulan: ${namaBulan}\n\n`;
+            let htmlList = '', totalTunggakan = 0, countTunggakan = 0, rekapText = `*Bismillah. Laporan Rekap SPP (Belum Lunas)*\nBulan: ${namaBulan}\n\n`;
 
             DATA_SISWA.forEach((s) => {
                 const dataTagihan = hitungTotalTagihan(s);
                 const isPaid = (s.payments && s.payments["Bulan Ini"] || "").toLowerCase().includes("lunas");
                 
                 if (dataTagihan.total > 0 && !isPaid) {
-                    countTunggakan++;
-                    totalTunggakan += dataTagihan.total;
-                    
+                    countTunggakan++; totalTunggakan += dataTagihan.total;
                     let nominalJepang = dataTagihan.total.toLocaleString('ja-JP');
                     let kelasUtama = s.classes[0] ? s.classes[0].split('(')[0] : '-';
-                    // Tambahan detail info tunggakan jika ada di data siswa
                     let infoTunggakan = s.tunggakan_bulan ? `<p class="text-[9px] font-bold text-red-500 mt-0.5">Nunggak: ${s.tunggakan_bulan} bulan</p>` : '';
-                    
                     let waPesan = `Bismillah.\nMohon izin mengingatkan, tagihan SPP RBM Japan bulan *${namaBulan}* untuk ananda *${s.name}* sebesar *¥${nominalJepang}* belum kami terima konfirmasinya.\n\nJazakumullahu khairan atas kerjasamanya. 🌸`;
                     let linkWAPersonal = `https://wa.me/?text=${encodeURIComponent(waPesan)}`;
 
@@ -712,48 +657,28 @@ function renderPertanyaan() {
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
                             <span class="font-black text-orange-500 text-sm">¥${nominalJepang}</span>
-                            <button onclick="window.open('${linkWAPersonal}', '_blank')" class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-500 hover:text-white transition active:scale-95 border border-emerald-100" title="Tagih via WA">
-                                <i class="fa-brands fa-whatsapp text-lg"></i>
-                            </button>
+                            <button onclick="window.open('${linkWAPersonal}', '_blank')" class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-500 hover:text-white transition active:scale-95 border border-emerald-100" title="Tagih via WA"><i class="fa-brands fa-whatsapp text-lg"></i></button>
                         </div>
                     </div>`;
-                    
                     rekapText += `${countTunggakan}. ${s.name} - ¥${nominalJepang}\n`;
                 }
             });
 
             document.getElementById('stat-nunggak').innerText = countTunggakan;
-
             if (countTunggakan === 0) {
-                htmlList = `
-                <div class="text-center py-8">
-                    <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fa-solid fa-check-double text-2xl"></i>
-                    </div>
-                    <p class="text-sm text-slate-500 font-bold italic">Alhamdulillah,<br>Semua SPP sudah lunas! 🎉</p>
-                </div>`;
+                htmlList = `<div class="text-center py-8"><div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-check-double text-2xl"></i></div><p class="text-sm text-slate-500 font-bold italic">Alhamdulillah,<br>Semua SPP sudah lunas! 🎉</p></div>`;
                 rekapText += `Alhamdulillah, semua SPP sudah lunas.`;
-            } else {
-                rekapText += `\n*Total Menunggu: ¥${totalTunggakan.toLocaleString('ja-JP')}*`;
-            }
-
-            TEKS_REKAP_WA = rekapText;
-            listContainer.innerHTML = htmlList;
+            } else { rekapText += `\n*Total Menunggu: ¥${totalTunggakan.toLocaleString('ja-JP')}*`; }
+            TEKS_REKAP_WA = rekapText; listContainer.innerHTML = htmlList;
         }
 
-        function copyRekapSPP() {
-            if (!TEKS_REKAP_WA) return;
-            navigator.clipboard.writeText(TEKS_REKAP_WA).then(() => { 
-                showMsg("Rekap tercopy ke Clipboard!", "success"); 
-            });
-        }
+        function copyRekapSPP() { if (!TEKS_REKAP_WA) return; navigator.clipboard.writeText(TEKS_REKAP_WA).then(() => { showMsg("Rekap tercopy ke Clipboard!", "success"); }); }
 
-        // AUDIO & TOAST ALERT
+        // AUDIO & TOAST
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
             if (type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime+0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.1); osc.start(); osc.stop(audioCtx.currentTime+0.1); }
             else if (type === 'success') { osc.type = 'triangle'; osc.frequency.setValueAtTime(500, audioCtx.currentTime); osc.frequency.setValueAtTime(800, audioCtx.currentTime+0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.3); osc.start(); osc.stop(audioCtx.currentTime+0.3); }
         }
