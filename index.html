@@ -252,7 +252,6 @@
         document.addEventListener("DOMContentLoaded", () => {
             const today = new Date();
             
-            // Atur default kalender
             const dateInput = document.getElementById('input-tgl-absen');
             if (dateInput) dateInput.valueAsDate = today;
 
@@ -266,7 +265,6 @@
                 document.getElementById('tgl-hijriah').innerText = "";
             }
 
-            // Atur pilihan dropdown bulan ke bulan saat ini
             const currentMonth = today.getMonth() + 1;
             const selectBulan = document.getElementById('select-bulan-spp');
             if (selectBulan) selectBulan.value = currentMonth.toString();
@@ -353,7 +351,6 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-        // --- TRIK ARAB BIDI ---
         function formatArabBidi(text) {
             if(/[\u0600-\u06FF]/.test(text)) {
                 let latinPart = text.replace(/[\u0600-\u06FF]+/g, '').trim();
@@ -456,7 +453,15 @@
             data.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
         }
 
-        // --- RENDER SANTRI (DENGAN SMART DROPDOWN KELAS) ---
+        // --- FUNGSI PEMBERSIH KELAS UNTUK UI (MEMBUANG HURUF A, B, J, DST) ---
+        function bersihkanNamaKelasUI(nama) {
+            if (!nama) return "Umum";
+            let clean = nama.split('(')[0].trim(); // Buang hari
+            clean = clean.replace(/\s+[a-zA-Z]$/i, '').trim(); // Buang abjad kelas tunggal di belakang
+            return clean;
+        }
+
+        // --- RENDER SANTRI (DENGAN SMART DROPDOWN) ---
         function renderSantri(data) {
             const container = document.getElementById('santri-container');
             container.innerHTML = ""; 
@@ -468,37 +473,35 @@
             data.forEach(s => {
                 const color = ['blue', 'emerald', 'orange', 'indigo', 'rose'][s.name.length % 5];
                 
-                // Cari list kelas unik untuk siswa ini (Sesuai Guru yang Login)
+                // Cari list kelas unik untuk siswa ini berdasarkan Guru yang Login
                 let listKelas = [];
                 if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
-                    // Jika Admin, bisa lihat semua kelas yang diikuti murid tersebut
                     if (s.classes && s.classes.length > 0) {
-                        listKelas = s.classes.map(c => c.split('(')[0].trim());
+                        listKelas = s.classes.map(c => bersihkanNamaKelasUI(c));
                     }
                 } else {
-                    // Jika Guru, HANYA munculkan kelas yang diajarkan oleh guru tersebut
                     if (s.schedule) {
                         s.schedule.forEach(jadwal => {
                             if (jadwal.teacher && jadwal.teacher.includes(LOGGED_IN_TEACHER)) {
-                                listKelas.push(jadwal.subject.split('(')[0].trim());
+                                listKelas.push(bersihkanNamaKelasUI(jadwal.subject));
                             }
                         });
                     }
                 }
                 
-                // Fallback (Jaga-jaga jika list kosong)
+                // Fallback jika kosong
                 if (listKelas.length === 0) {
                     if (s.classes && s.classes.length > 0) {
-                        listKelas.push(s.classes[0].split('(')[0].trim());
+                        listKelas.push(bersihkanNamaKelasUI(s.classes[0]));
                     } else {
                         listKelas.push("Umum");
                     }
                 }
                 
-                // Hapus duplikat jika ada nama kelas yang sama
+                // Hapus duplikat
                 listKelas = [...new Set(listKelas)];
 
-                // Buat UI Pemilih Kelas (Dropdown jika > 1, Teks biasa jika cuma 1)
+                // Buat UI Pemilih Kelas (Dropdown jika lebih dari 1 kelas)
                 let kelasUI = '';
                 let idSelectKelas = `mapel-${s.id}`;
                 
@@ -536,7 +539,7 @@
             renderSantri(FILTERED_SISWA.filter(s => s.name && s.name.toLowerCase().includes(e.target.value.toLowerCase())));
         });
 
-        // FUNGSI JEMBATAN UNTUK AMBIL KELAS DARI UI
+        // FUNGSI JEMBATAN UNTUK AMBIL KELAS DARI UI SEBELUM ABSEN
         function prosesAbsenUI(id, nama, status, idSelectKelas) {
             const el = document.getElementById(idSelectKelas);
             let mapel = "";
@@ -653,7 +656,7 @@
                         status: status, 
                         guru: LOGGED_IN_TEACHER, 
                         tanggal_absen: tglAbsen,
-                        mapel: mapel // Mengirim mata pelajaran spesifik yang dipilih/terdeteksi
+                        mapel: mapel // <-- Mapel dikirim dari sini
                     }) 
                 });
                 showMsg(`✅ Absen tersimpan!`, 'success'); playSound('success');
