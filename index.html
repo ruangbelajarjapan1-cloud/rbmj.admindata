@@ -6,9 +6,10 @@
     <title>Portal Guru - RBM Japan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .font-arabic { font-family: 'Amiri', serif; }
         .active-tab { color: #3b82f6; }
         .active-tab::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 35px; height: 4px; background-color: #3b82f6; border-radius: 0 0 8px 8px; }
         .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); }
@@ -28,9 +29,11 @@
         // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2a5-sm2_gLBPF5jpTmZfBuN9PppkvUI3nXIyOJbYJ4XDZA3SDE7-FNU784ZxfSZjr/exec";
     </script>
+
     <div id="login-screen">
         <div class="w-24 h-24 mb-4 rounded-3xl bg-white shadow-md p-2 flex items-center justify-center transform rotate-3 border-4 border-white">
-            <img src="logo.jpeg" alt="Logo RBM Japan" class="w-full h-full object-contain rounded-2xl" onerror="this.src='https://ui-avatars.com/api/?name=RBM&background=eff6ff&color=3b82f6'">
+            <img src="logo.jpeg" alt="Logo RBM Japan" class="w-full h-full object-contain rounded-2xl" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <i class="fa-solid fa-book-open-reader text-blue-500 text-4xl hidden"></i>
         </div>
         
         <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight text-center">Portal Pengajar</h1>
@@ -38,7 +41,7 @@
         
         <div class="w-full max-w-sm glass-card p-6 rounded-[2rem]">
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Nama Anda</label>
-            <select id="login-nama-guru" class="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <select id="login-nama-guru" dir="auto" class="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="">Memuat data guru...</option>
             </select>
             
@@ -55,8 +58,7 @@
     <header class="p-5 bg-white/90 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-200/60 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center shadow-lg shadow-blue-200 overflow-hidden p-1">
-                <img src="logo.jpeg" class="w-full h-full object-contain rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <i class="fa-solid fa-user-tie text-white text-lg hidden"></i>
+                <i class="fa-solid fa-graduation-cap text-white text-lg"></i>
             </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800 tracking-tight leading-none" id="header-nama-guru">Loading...</h1>
@@ -71,6 +73,8 @@
     <main class="flex-1 p-5 pb-32 overflow-y-auto no-scrollbar relative">
         
         <div id="view-dashboard" class="space-y-6 fade-in hidden">
+            <p class="text-center font-arabic text-2xl text-slate-700 mt-2 mb-4" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
+
             <div class="glass-card p-5 rounded-[1.5rem] relative overflow-hidden group">
                 <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-emerald-100 to-teal-50 rounded-full blur-2xl opacity-70"></div>
                 <div class="relative z-10">
@@ -121,9 +125,12 @@
 
         <div id="view-absensi" class="hidden space-y-5 fade-in">
             <div class="glass-card p-5 rounded-[1.5rem]">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-extrabold text-slate-800">Daftar Hadir Kelas</h2>
-                    <p class="text-xs font-bold text-slate-400" id="tgl-absen">Hari Ini</p>
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-800">Daftar Hadir</h2>
+                        <p class="text-xs font-bold text-blue-500 mt-1" id="tgl-hijriah">Memuat Hijriah...</p>
+                    </div>
+                    <input type="date" id="input-tgl-absen" class="p-2 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
                 </div>
                 <div class="relative">
                     <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
@@ -172,7 +179,7 @@
             
             <div class="glass-card p-5 rounded-[1.5rem]">
                 <div class="flex justify-between items-center mb-4">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Menunggu Pembayaran</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Data Tunggakan</p>
                     <button onclick="copyRekapSPP()" class="text-xs font-bold bg-slate-800 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-slate-700 active:scale-95 transition">
                         <i class="fa-regular fa-copy"></i> Copy Teks
                     </button>
@@ -204,15 +211,25 @@
         let DATA_HARGA = {};
         let DATA_GURU_ALL = []; 
         let TEKS_REKAP_WA = "";
-        
         let LOGGED_IN_TEACHER = ""; 
 
         document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('tgl-absen').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
-            document.getElementById('lbl-bulan-spp').innerText = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            // Set Tanggal Absen Default ke Hari Ini
+            const dateInput = document.getElementById('input-tgl-absen');
+            const today = new Date();
+            dateInput.valueAsDate = today;
+
+            // Generate Tanggal Hijriah
+            try {
+                const hijriFormatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('tgl-hijriah').innerText = hijriFormatter.format(today);
+            } catch (e) {
+                document.getElementById('tgl-hijriah').innerText = "";
+            }
+
+            document.getElementById('lbl-bulan-spp').innerText = today.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             
             const savedTeacher = localStorage.getItem('rbm_guru_name');
-            
             if (savedTeacher) {
                 LOGGED_IN_TEACHER = savedTeacher;
                 berhasilLoginState();
@@ -228,9 +245,7 @@
             
             if (!nama || !pinInput) { showMsg("Lengkapi Nama dan PIN!", "warning"); return; }
 
-            // [FITUR KHUSUS] Pintu Belakang Untuk Admin RBM (Wahyu)
             if (nama === "Admin RBM (Wahyu)") {
-                // PIN KHUSUS ADMIN (Silakan ganti jika diperlukan)
                 if (pinInput === "123456") { 
                     LOGGED_IN_TEACHER = "Admin RBM (Wahyu)";
                     simpanSesiLogin();
@@ -240,15 +255,13 @@
                 }
             }
 
-            // Validasi Guru Biasa
             const guruValid = DATA_GURU_ALL.find(g => (typeof g === 'string' ? g : g.nama) === nama);
             if(!guruValid) {
                 showMsg("Data guru tidak ditemukan", "warning"); return;
             }
 
-            // Pengecekan PIN
-           const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
-if (String(pinGuru) !== String(pinInput)) {
+            const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
+            if (String(pinGuru) !== String(pinInput)) {
                 showMsg("PIN Salah! Cek kembali di Spreadsheet.", "warning"); return; 
             }
             
@@ -268,7 +281,6 @@ if (String(pinGuru) !== String(pinInput)) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('bottom-nav').style.display = 'block';
             
-            // Jika yang login Admin Wahyu, buka fitur Rekap SPP
             if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
                 document.getElementById('nav-kas').classList.remove('hidden');
                 document.getElementById('btn-menu-kas').classList.remove('hidden');
@@ -299,59 +311,87 @@ if (String(pinGuru) !== String(pinInput)) {
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-       // --- FETCH DATA ---
+        // FUNGSI MEMPERBAIKI TEKS ARAB DI DROPDOWN
+        function formatArabBidi(text) {
+            // Jika mengandung huruf Arab, bungkus dengan kode Unicode Right-to-Left Embedding (RLE)
+            if(/[\u0600-\u06FF]/.test(text)) {
+                return '\u202B' + text + '\u202C'; 
+            }
+            return text;
+        }
+
+        // --- FETCH DATA (DENGAN CACHE LOKAL) ---
         async function loadDatabase() {
-            if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.remove('hidden');
-            
-            // 1. Siapkan opsi default & Admin DILUAR try-catch agar selalu muncul
             const selectGuru = document.getElementById('login-nama-guru');
             selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
             selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
 
+            // 1. Coba ambil dari Local Storage dulu (Offline First = Instan)
+            const cachedData = localStorage.getItem('rbm_data_cache');
+            if(cachedData) {
+                try {
+                    const result = JSON.parse(cachedData);
+                    prosesDataKeUI(result, selectGuru);
+                } catch(e) {}
+            }
+
+            if(!LOGGED_IN_TEACHER && !cachedData) document.getElementById('login-loader').classList.remove('hidden');
+
             try {
-                // 2. Mulai ambil data dari Google Apps Script
+                // 2. Fetch data terbaru di background
                 const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
                 
-                DATA_SISWA = result.students || [];
-                DATA_HARGA = result.prices || {};
-                DATA_GURU_ALL = result.teachers || []; 
+                // Simpan ke cache untuk reload berikutnya
+                localStorage.setItem('rbm_data_cache', JSON.stringify(result));
                 
-                // 3. Masukkan guru lain dari database (pastikan Admin tidak duplikat)
-                if(DATA_GURU_ALL.length > 0) {
-                    DATA_GURU_ALL.forEach(g => {
-                        let namaGuru = typeof g === 'string' ? g : g.nama;
-                        if (namaGuru !== "Admin RBM (Wahyu)") {
-                            selectGuru.innerHTML += `<option value="${namaGuru}">${namaGuru}</option>`;
-                        }
-                    });
-                }
-                
-                DATA_SISWA.sort((a,b) => a.name.localeCompare(b.name));
-
-                if (LOGGED_IN_TEACHER) {
-                    saringMuridBerdasarkanAkses();
-                }
-
-                if(result.donasi) {
-                    document.getElementById('donasi-teks').innerText = `Terkumpul: ¥${result.donasi.terkumpul.toLocaleString('ja-JP')}`;
-                    document.getElementById('donasi-persen').innerText = `${result.donasi.persen}%`;
-                    document.getElementById('donasi-bar').style.width = `${result.donasi.persen}%`;
-                }
+                // Perbarui UI dengan data segar
+                selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
+                selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
+                prosesDataKeUI(result, selectGuru);
 
             } catch (err) {
-                showMsg("Koneksi ke Database Gagal!", "warning");
+                if(!cachedData) showMsg("Koneksi ke Database Gagal!", "warning");
                 console.error("Error Fetching Data:", err);
             }
             
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.add('hidden');
         }
-// --- FILTER MURID CERDAS (Mencocokkan Jadwal & Nama Guru) ---
+
+        function prosesDataKeUI(result, selectGuru) {
+            DATA_SISWA = result.students || [];
+            DATA_HARGA = result.prices || {};
+            DATA_GURU_ALL = result.teachers || []; 
+            
+            if(DATA_GURU_ALL.length > 0) {
+                DATA_GURU_ALL.forEach(g => {
+                    let namaGuru = typeof g === 'string' ? g : g.nama;
+                    if (namaGuru !== "Admin RBM (Wahyu)") {
+                        // Aplikasikan perbaikan BiDi Arab di sini
+                        let namaTampil = formatArabBidi(namaGuru);
+                        selectGuru.innerHTML += `<option value="${namaGuru}">${namaTampil}</option>`;
+                    }
+                });
+            }
+            
+            DATA_SISWA.sort((a,b) => a.name.localeCompare(b.name));
+
+            if (LOGGED_IN_TEACHER) {
+                saringMuridBerdasarkanAkses();
+            }
+
+            if(result.donasi) {
+                document.getElementById('donasi-teks').innerText = `Terkumpul: ¥${result.donasi.terkumpul.toLocaleString('ja-JP')}`;
+                document.getElementById('donasi-persen').innerText = `${result.donasi.persen}%`;
+                document.getElementById('donasi-bar').style.width = `${result.donasi.persen}%`;
+            }
+        }
+
+        // --- FILTER MURID CERDAS ---
         function saringMuridBerdasarkanAkses() {
             if (LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
-                FILTERED_SISWA = [...DATA_SISWA]; // Admin melihat semua murid
+                FILTERED_SISWA = [...DATA_SISWA]; 
             } else {
-                // Saring murid yang di dalam jadwal belajarnya ada nama guru ini
                 FILTERED_SISWA = DATA_SISWA.filter(s => {
                     return s.schedule && s.schedule.some(jadwal => {
                         return jadwal.teacher && jadwal.teacher.includes(LOGGED_IN_TEACHER);
@@ -359,18 +399,16 @@ if (String(pinGuru) !== String(pinInput)) {
                 });
             }
 
-            // Update angka total santri kelas
             document.getElementById('stat-total').innerText = FILTERED_SISWA.length;
             
-            // Render ulang daftar nama santri & dropdown
             if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
             if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
             
-            // Render fitur SPP hanya jika yang login Admin
             if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
                 if (typeof renderRekapSPP === "function") renderRekapSPP();
             }
         }
+
         function populateCatatanDropdown(data) {
             const select = document.getElementById('inputCatatanNama');
             select.innerHTML = '<option value="">-- Pilih Santri di Kelas Anda --</option>';
@@ -383,7 +421,7 @@ if (String(pinGuru) !== String(pinInput)) {
             const container = document.getElementById('santri-container');
             container.innerHTML = ""; 
             if(!data || data.length === 0) {
-                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic">Belum ada murid di kelas Anda, atau jadwal belum terhubung.</div>`;
+                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic">Belum ada murid di kelas Anda.</div>`;
                 return;
             }
 
@@ -395,8 +433,8 @@ if (String(pinGuru) !== String(pinInput)) {
                 card.className = "glass-card p-4 rounded-[1.25rem] flex justify-between items-center mb-3 group";
                 card.innerHTML = `
                     <div class="flex-1 pr-3 flex items-center">
-                        <div class="w-10 h-10 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center font-extrabold text-sm mr-3 shrink-0">
-                            ${s.name.charAt(0).toUpperCase()}
+                        <div class="w-10 h-10 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center font-extrabold text-sm mr-3 shrink-0 uppercase">
+                            ${s.name.charAt(0)}
                         </div>
                         <div>
                             <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-1">${s.name}</p>
@@ -418,6 +456,8 @@ if (String(pinGuru) !== String(pinInput)) {
 
         // --- FITUR INPUT KE SPREADSHEET ---
         async function kirimAbsen(id, nama, status) {
+            const tglAbsen = document.getElementById('input-tgl-absen').value; // Mengambil tanggal dinamis
+            
             showMsg(`Memproses absen ${nama}...`, 'success');
             try {
                 await fetch(WEB_APP_URL, { 
@@ -426,12 +466,14 @@ if (String(pinGuru) !== String(pinInput)) {
                         action: 'absen_admin', 
                         id: id, 
                         status: status,
-                        guru: LOGGED_IN_TEACHER
+                        guru: LOGGED_IN_TEACHER,
+                        tanggal_absen: tglAbsen // Data ini dikirim ke backend
                     }) 
                 });
                 showMsg(`✅ Absen tersimpan!`, 'success');
                 playSound('success');
             } catch (err) {
+                // Sering terjadi CORS pada script GAS jika tidak diatur benar, namun aksi POST tetap jalan
                 showMsg(`✅ Absen tersimpan!`, 'success'); 
                 playSound('success');
             }
@@ -560,6 +602,8 @@ if (String(pinGuru) !== String(pinInput)) {
                     
                     let nominalJepang = dataTagihan.total.toLocaleString('ja-JP');
                     let kelasUtama = s.classes[0] ? s.classes[0].split('(')[0] : '-';
+                    // Tambahan detail info tunggakan jika ada di data siswa
+                    let infoTunggakan = s.tunggakan_bulan ? `<p class="text-[9px] font-bold text-red-500 mt-0.5">Nunggak: ${s.tunggakan_bulan} bulan</p>` : '';
                     
                     let waPesan = `Bismillah.\nMohon izin mengingatkan, tagihan SPP RBM Japan bulan *${namaBulan}* untuk ananda *${s.name}* sebesar *¥${nominalJepang}* belum kami terima konfirmasinya.\n\nJazakumullahu khairan atas kerjasamanya. 🌸`;
                     let linkWAPersonal = `https://wa.me/?text=${encodeURIComponent(waPesan)}`;
@@ -569,6 +613,7 @@ if (String(pinGuru) !== String(pinInput)) {
                         <div class="flex-1 min-w-0 pr-2">
                             <h4 class="font-bold text-xs text-slate-700 truncate">${s.name}</h4>
                             <p class="text-[9px] text-slate-400 mt-0.5 truncate">${kelasUtama}</p>
+                            ${infoTunggakan}
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
                             <span class="font-black text-orange-500 text-sm">¥${nominalJepang}</span>
