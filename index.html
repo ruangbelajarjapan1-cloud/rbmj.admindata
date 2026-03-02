@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Guru - RBM Japan</title>
+    <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
@@ -144,7 +145,7 @@
             <div id="santri-container" class="space-y-3"></div>
         </div>
 
-       <div id="view-catatan" class="hidden space-y-5 fade-in">
+        <div id="view-catatan" class="hidden space-y-5 fade-in">
             <div class="flex items-center justify-between px-1 mt-2">
                 <h2 class="text-xl font-extrabold text-slate-800">Catatan & Nilai</h2>
                 <input type="date" id="input-tgl-catatan" class="p-2 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
@@ -187,7 +188,7 @@
                 </div>
         </div>
 
-       <div id="view-kas" class="hidden space-y-5 fade-in">
+        <div id="view-kas" class="hidden space-y-5 fade-in">
             <div class="flex justify-between items-center px-1 mt-2">
                 <h2 class="text-xl font-extrabold text-slate-800">Rekap SPP</h2>
                 <select id="select-bulan-spp" onchange="gantiBulanSPP()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-sm uppercase tracking-wider">
@@ -251,13 +252,12 @@
         document.addEventListener("DOMContentLoaded", () => {
             const today = new Date();
             
-            // 1. Set default kalender Absensi
+            // Atur default kalender
             const dateInput = document.getElementById('input-tgl-absen');
-            if(dateInput) dateInput.valueAsDate = today;
+            if (dateInput) dateInput.valueAsDate = today;
 
-            // 2. Set default kalender Catatan & Nilai (Ini yang ditambahkan)
             const dateCatatanInput = document.getElementById('input-tgl-catatan');
-            if(dateCatatanInput) dateCatatanInput.valueAsDate = today;
+            if (dateCatatanInput) dateCatatanInput.valueAsDate = today;
 
             try {
                 const hijriFormatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -266,8 +266,11 @@
                 document.getElementById('tgl-hijriah').innerText = "";
             }
 
-            document.getElementById('lbl-bulan-spp').innerText = today.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-            
+            // Atur pilihan dropdown bulan ke bulan saat ini
+            const currentMonth = today.getMonth() + 1;
+            const selectBulan = document.getElementById('select-bulan-spp');
+            if (selectBulan) selectBulan.value = currentMonth.toString();
+
             const savedTeacher = localStorage.getItem('rbm_guru_name');
             if (savedTeacher) {
                 LOGGED_IN_TEACHER = savedTeacher;
@@ -295,14 +298,10 @@
             }
 
             const guruValid = DATA_GURU_ALL.find(g => (typeof g === 'string' ? g : g.nama) === nama);
-            if(!guruValid) {
-                showMsg("Data guru tidak ditemukan", "warning"); return;
-            }
+            if(!guruValid) { showMsg("Data guru tidak ditemukan", "warning"); return; }
 
             const pinGuru = typeof guruValid === 'string' ? "" : (guruValid.pin || "");
-            if (String(pinGuru) !== String(pinInput)) {
-                showMsg("PIN Salah! Cek kembali.", "warning"); return; 
-            }
+            if (String(pinGuru) !== String(pinInput)) { showMsg("PIN Salah! Cek kembali.", "warning"); return; }
             
             LOGGED_IN_TEACHER = typeof guruValid === 'string' ? guruValid : guruValid.nama;
             simpanSesiLogin();
@@ -350,19 +349,19 @@
             document.getElementById('nav-' + tabId).classList.remove('text-slate-400');
         }
 
-      function formatArabBidi(text) {
+        // --- TRIK ARAB BIDI ---
+        function formatArabBidi(text) {
             if(/[\u0600-\u06FF]/.test(text)) {
-                // 1. Ekstrak teks Latin (Hapus semua huruf Arab)
+                // Ekstrak teks Latin
                 let latinPart = text.replace(/[\u0600-\u06FF]+/g, '').trim();
+                // Ekstrak kata-kata Arab ke dalam array
+                let arabicWords = text.match(/[\u0600-\u06FF]+/g);
                 
-                // 2. Ekstrak teks Arab secara utuh (Hapus semua KECUALI huruf Arab dan spasi)
-                let arabicPart = text.replace(/[^\u0600-\u06FF\s]/g, '').trim();
-                
-                // 3. Bungkus dengan format isolasi BiDi tingkat tinggi:
-                // \u202A = Kunci Latin ke Kiri-Kanan (LTR)
-                // \u202B = Kunci Arab ke Kanan-Kiri (RTL)
-                // \u202C = Penutup (Pop Directional Formatting)
-                return '\u202A' + latinPart + '\u202C \u202B' + arabicPart + '\u202C'; 
+                if (arabicWords) {
+                    // Putar balik urutan kata Arabnya secara paksa untuk mengelabui browser dropdown
+                    let reversedArabic = arabicWords.reverse().join(' ');
+                    return latinPart + ' ' + reversedArabic;
+                }
             }
             return text;
         }
@@ -386,16 +385,13 @@
             try {
                 const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
-                
                 localStorage.setItem('rbm_data_cache', JSON.stringify(result));
                 
                 selectGuru.innerHTML = '<option value="">-- Pilih Ustadz/ah --</option>';
                 selectGuru.innerHTML += '<option value="Admin RBM (Wahyu)" class="font-bold text-blue-600">Admin RBM (Wahyu)</option>';
                 prosesDataKeUI(result, selectGuru);
-
             } catch (err) {
                 if(!cachedData) showMsg("Koneksi ke Database Gagal!", "warning");
-                console.error("Error Fetching Data:", err);
             }
             
             if(!LOGGED_IN_TEACHER) document.getElementById('login-loader').classList.add('hidden');
@@ -418,9 +414,7 @@
             
             DATA_SISWA.sort((a,b) => a.name.localeCompare(b.name));
 
-            if (LOGGED_IN_TEACHER) {
-                saringMuridBerdasarkanAkses();
-            }
+            if (LOGGED_IN_TEACHER) saringMuridBerdasarkanAkses();
 
             if(result.donasi) {
                 document.getElementById('donasi-teks').innerText = `Terkumpul: ¥${result.donasi.terkumpul.toLocaleString('ja-JP')}`;
@@ -442,13 +436,11 @@
 
             document.getElementById('stat-total').innerText = FILTERED_SISWA.length;
             
-            if (typeof renderSantri === "function") renderSantri(FILTERED_SISWA);
-            if (typeof populateCatatanDropdown === "function") populateCatatanDropdown(FILTERED_SISWA);
-            if (typeof renderPertanyaan === "function") renderPertanyaan();
+            renderSantri(FILTERED_SISWA);
+            populateCatatanDropdown(FILTERED_SISWA);
+            renderPertanyaan();
             
-            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") {
-                if (typeof renderRekapSPP === "function") renderRekapSPP();
-            }
+            if(LOGGED_IN_TEACHER === "Admin RBM (Wahyu)") renderRekapSPP();
         }
 
         function populateCatatanDropdown(data) {
@@ -457,6 +449,7 @@
             data.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
         }
 
+        // --- RENDER SANTRI ---
         function renderSantri(data) {
             const container = document.getElementById('santri-container');
             container.innerHTML = ""; 
@@ -494,7 +487,7 @@
             renderSantri(FILTERED_SISWA.filter(s => s.name && s.name.toLowerCase().includes(e.target.value.toLowerCase())));
         });
 
-        // --- RENDER PERTANYAAN (BARU) ---
+        // --- RENDER PERTANYAAN ---
         function renderPertanyaan() {
             const container = document.getElementById('list-pertanyaan');
             let html = '';
@@ -532,7 +525,6 @@
 
             document.getElementById('badge-tanya').innerText = `${countTanya} Menunggu`;
             
-            // Tampilkan titik merah di dashboard jika ada pertanyaan
             const badgeCepat = document.getElementById('badge-cepat-tanya');
             if (badgeCepat) {
                 if (countTanya > 0) {
@@ -552,7 +544,6 @@
                     <p class="text-sm text-slate-500 font-bold">Alhamdulillah,<br>Tidak ada pertanyaan baru.</p>
                 </div>`;
             }
-
             container.innerHTML = html;
         }
 
@@ -567,12 +558,7 @@
             try {
                 await fetch(WEB_APP_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        action: 'jawab_pertanyaan',
-                        id_siswa: idSiswa,
-                        pertanyaan: pertanyaan,
-                        jawaban: jawaban
-                    })
+                    body: JSON.stringify({ action: 'jawab_pertanyaan', id_siswa: idSiswa, pertanyaan: pertanyaan, jawaban: jawaban })
                 });
                 suksesKirimTanya(inputId);
             } catch (err) {
@@ -581,14 +567,11 @@
         }
         
         function suksesKirimTanya(inputId) {
-            showMsg("✅ Jawaban terkirim!", "success");
-            playSound('success');
+            showMsg("✅ Jawaban terkirim!", "success"); playSound('success');
             document.getElementById(inputId).parentElement.style.display = 'none';
-            
             let badge = document.getElementById('badge-tanya');
             let count = parseInt(badge.innerText) - 1;
             badge.innerText = `${count} Menunggu`;
-            
             const badgeCepat = document.getElementById('badge-cepat-tanya');
             if(badgeCepat) {
                 if(count > 0) { badgeCepat.innerText = count; } 
@@ -608,7 +591,7 @@
             }
         }
 
-       async function kirimCatatan() {
+        async function kirimCatatan() {
             const selectEl = document.getElementById('inputCatatanNama');
             const idSiswa = selectEl.value;
             const namaSiswa = selectEl.options[selectEl.selectedIndex].text;
@@ -616,7 +599,6 @@
             const pertemuan = document.getElementById('inputPertemuan').value;
             const pesan = document.getElementById('inputPesan').value;
             
-            // [BARU] Ambil value tanggal dari kalender UI
             const tglCatatan = document.getElementById('input-tgl-catatan').value;
 
             if(!idSiswa || !nilai || !pesan) { showMsg("Mohon lengkapi semua kolom!", "warning"); return; }
@@ -628,16 +610,7 @@
             try {
                 await fetch(WEB_APP_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'input_nilai', 
-                        id_siswa: idSiswa, 
-                        nama_siswa: namaSiswa, 
-                        nama_guru: LOGGED_IN_TEACHER, 
-                        nilai: nilai, 
-                        pertemuan: pertemuan, 
-                        pesan: pesan,
-                        tanggal_catatan: tglCatatan // [BARU] Kirim tanggal ke backend
-                    }) 
+                    body: JSON.stringify({ action: 'input_nilai', id_siswa: idSiswa, nama_siswa: namaSiswa, nama_guru: LOGGED_IN_TEACHER, nilai: nilai, pertemuan: pertemuan, pesan: pesan, tanggal_catatan: tglCatatan }) 
                 });
                 showMsg(`✅ Catatan rapor terkirim!`, 'success'); playSound('success');
                 document.getElementById('inputNilai').value = ''; document.getElementById('inputPertemuan').value = ''; document.getElementById('inputPesan').value = ''; selectEl.value = '';
@@ -648,15 +621,9 @@
             btn.innerHTML = orgHtml;
         }
 
-       // --- SPP (ADMIN) ---
+        // --- SPP (ADMIN) ---
         let AKTIF_TAB_SPP = 'nunggak';
         let PILIHAN_BULAN = new Date().getMonth() + 1; // Default diset ke bulan saat ini
-        
-        // Atur dropdown saat aplikasi pertama dibuka
-        document.addEventListener("DOMContentLoaded", () => {
-            const selectBulan = document.getElementById('select-bulan-spp');
-            if (selectBulan) selectBulan.value = PILIHAN_BULAN.toString();
-        });
 
         function gantiBulanSPP() {
             PILIHAN_BULAN = parseInt(document.getElementById('select-bulan-spp').value);
@@ -705,7 +672,6 @@
         function hitungAkumulasiNunggak(siswa, targetBulan) {
             let count = 0;
             let start = siswa.start_month ? parseInt(siswa.start_month) : 1;
-            // Hitung dari bulan gabung sampai bulan yang dipilih
             for(let b = start; b <= targetBulan; b++) {
                 let hist = siswa.history.find(h => parseInt(h.bulan) === b);
                 let status = hist ? hist.status.toLowerCase() : "";
@@ -714,12 +680,11 @@
             return count;
         }
 
-       function renderRekapSPP() {
+        function renderRekapSPP() {
             const listContainer = document.getElementById('list-tunggakan');
             const selectBulan = document.getElementById('select-bulan-spp');
             const namaBulan = selectBulan.options[selectBulan.selectedIndex].text;
             
-            // Ubah gaya visual tombol tab
             const tabNunggak = document.getElementById('tab-spp-nunggak');
             const tabSemua = document.getElementById('tab-spp-semua');
             if(tabNunggak && tabSemua) {
@@ -746,11 +711,9 @@
                     let nominalJepang = dataTagihan.total.toLocaleString('ja-JP');
                     let kelasUtama = s.classes[0] ? s.classes[0].split('(')[0] : '-';
                     
-                    // Deteksi total akumulasi belum bayar
                     let jmlNunggak = hitungAkumulasiNunggak(s, PILIHAN_BULAN);
                     let infoTunggakan = jmlNunggak > 1 ? `<p class="text-[9px] font-extrabold text-rose-500 mt-0.5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Nunggak: ${jmlNunggak} bln</p>` : '';
 
-                    // 1. KONDISI PENDING
                     if (statusBayar.includes("pending") || statusBayar.includes("menunggu")) {
                         countTunggakan++; totalTunggakan += dataTagihan.total;
                         htmlPending += `
@@ -766,7 +729,6 @@
                         </div>`;
                         rekapText += `- [PENDING] ${s.name} - ¥${nominalJepang}\n`;
                     } 
-                    // 2. KONDISI TUNGGAKAN
                     else if (!statusBayar.includes("lunas")) {
                         countTunggakan++; totalTunggakan += dataTagihan.total;
                         let waPesan = `Bismillah.\nMohon izin mengingatkan, tagihan SPP RBM Japan bulan *${namaBulan}* untuk ananda *${s.name}* sebesar *¥${nominalJepang}* belum kami terima konfirmasinya.\n\nJazakumullahu khairan. 🌸`;
@@ -787,7 +749,6 @@
                         </div>`;
                         rekapText += `- ${s.name} - ¥${nominalJepang}\n`;
                     }
-                    // 3. KONDISI LUNAS (Hanya muncul jika Tab "Semua Data" diklik)
                     else if (AKTIF_TAB_SPP === 'semua' && statusBayar.includes("lunas")) {
                         htmlLunas += `
                         <div class="bg-emerald-50/60 border border-emerald-100 p-3 rounded-xl flex items-center justify-between shadow-sm mb-2 opacity-80 fade-in">
@@ -807,25 +768,21 @@
             
             let finalHtml = '';
             
-            // Susun UI: Yang Pending ditaruh paling atas
             if (htmlPending !== '') {
                 finalHtml += `<h3 class="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-3 mt-1 bg-amber-50 inline-block px-3 py-1 rounded-full border border-amber-200"><i class="fa-solid fa-bell mr-1"></i> Butuh Validasi Admin</h3>` + htmlPending;
                 finalHtml += `<div class="h-px bg-slate-200 w-full my-4"></div>`;
             }
             
-            // Logika Tab
             if (AKTIF_TAB_SPP === 'nunggak') {
                 if (countTunggakan === 0 && htmlPending === '') {
                     finalHtml += `<div class="text-center py-8 fade-in"><div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-check-double text-2xl"></i></div><p class="text-sm text-slate-500 font-bold italic">Alhamdulillah,<br>Semua SPP lunas di bulan ini! 🎉</p></div>`;
                 } else { finalHtml += htmlTunggakan; }
             } else {
-                // Tampilan Semua Data (Gabungan Belum Lunas + Lunas)
                 finalHtml += htmlTunggakan; 
                 if(htmlLunas !== '') {
                     if (htmlTunggakan !== '') finalHtml += `<div class="h-px bg-slate-200 w-full my-4"></div>`;
                     finalHtml += htmlLunas; 
                 }
-                // Jika belum ada data sama sekali di bulan itu
                 if (countTunggakan === 0 && htmlPending === '' && htmlLunas === '') {
                    finalHtml += `<div class="text-center py-8 fade-in"><p class="text-sm text-slate-400 font-bold italic">Belum ada catatan tagihan di bulan ini.</p></div>`;
                 }
